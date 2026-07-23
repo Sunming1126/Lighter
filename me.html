@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>Lighter · 我的</title>
+<style>
+  /* ============================================================
+     Lighter design tokens - 与 onboarding/today/progress 一致
+     ============================================================ */
+  :root{
+    --bg: oklch(98.5% 0.004 140); --surface: oklch(100% 0.002 140); --surface-2: oklch(96.8% 0.005 140); --surface-3: oklch(94.5% 0.006 140);
+    --fg: oklch(22% 0.012 150); --fg-strong: oklch(14% 0.012 150); --muted: oklch(50% 0.012 150); --faint: oklch(68% 0.010 150);
+    --border: oklch(92% 0.005 140); --border-strong: oklch(86% 0.008 140);
+    --accent: oklch(56% 0.075 165); --accent-press: oklch(50% 0.078 165); --accent-fg: oklch(100% 0 0);
+    --accent-tint: oklch(96% 0.022 165); --plus: oklch(40% 0.06 250);
+    --danger: oklch(52% 0.14 25);
+    --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Segoe UI', system-ui, sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Segoe UI', system-ui, sans-serif;
+    --radius-card: 22px; --radius-row: 16px; --radius-btn: 18px; --safe-x: 22px; --tab-h: 82px;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{ background: oklch(90% 0.004 150); font-family: var(--font-body); color: var(--fg); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; display:flex; align-items:center; justify-content:center; min-height:100dvh; padding:24px; }
+  .phone{ position:relative; width:390px; height:844px; background:var(--bg); border-radius:54px; box-shadow: 0 0 0 12px oklch(18% 0.01 150), 0 0 0 14px oklch(40% 0.01 150), 0 40px 80px -20px oklch(20% 0.04 250 / 0.45); overflow:hidden; isolation:isolate; }
+  .island{ position:absolute; top:11px; left:50%; transform:translateX(-50%); width:120px; height:34px; background:#000; border-radius:20px; z-index:30; }
+  .statusbar{ position:absolute; top:0; left:0; right:0; height:54px; display:flex; align-items:center; justify-content:space-between; padding:18px 32px 0; z-index:25; font-family:var(--font-display); font-weight:600; font-size:15px; color:var(--fg); letter-spacing:-0.01em; }
+  .statusbar .sb-time{ font-variant-numeric: tabular-nums; }
+  .statusbar .sb-right{ display:flex; align-items:center; gap:6px; }
+  .statusbar svg{ display:block; }
+  .home-indicator{ position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:134px; height:5px; border-radius:3px; background:var(--fg); opacity:.85; z-index:30; }
+
+  .screen{ position:absolute; inset:0; padding-top:54px; display:flex; flex-direction:column; }
+  .header{ flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:8px var(--safe-x) 8px; min-height:44px; }
+  .header .date{ font:600 12px/1 var(--font-display); letter-spacing:.08em; text-transform:uppercase; color:var(--faint); }
+  .header .title{ font:600 22px/1.1 var(--font-display); letter-spacing:-0.02em; color:var(--fg-strong); margin-top:3px; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; border:none; background:var(--surface-2); color:var(--muted); display:grid; place-items:center; cursor:pointer; transition:background .15s; }
+  .icon-btn:active{ background:var(--surface-3); }
+  .body{ flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:4px var(--safe-x) 20px; }
+  .body::-webkit-scrollbar{ width:0; }
+
+  /* user header card */
+  .user-card{ background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius-card); padding:18px; display:flex; align-items:center; gap:14px; margin-top:6px; }
+  .avatar{ width:54px; height:54px; border-radius:50%; background:var(--accent-tint); color:var(--accent); display:grid; place-items:center; font:600 22px/1 var(--font-display); flex:0 0 auto; }
+  .user-meta{ flex:1; min-width:0; }
+  .user-meta .name{ font:600 18px/1.2 var(--font-display); letter-spacing:-0.01em; color:var(--fg-strong); }
+  .user-meta .sub{ margin-top:4px; font-size:13px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+  .user-meta .sub .pill{ font:600 10.5px/1 var(--font-display); letter-spacing:.04em; padding:3px 8px; border-radius:99px; background:var(--accent-tint); color:var(--accent); }
+  .user-edit{ width:32px; height:32px; border-radius:50%; border:none; background:transparent; color:var(--faint); display:grid; place-items:center; cursor:pointer; }
+
+  /* section */
+  .sec-label{ font:600 12px/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; color:var(--faint); margin:22px 2px 9px; }
+  .group{ background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius-card); overflow:hidden; }
+  .row{ display:flex; align-items:center; gap:13px; width:100%; padding:14px 16px; border:none; background:transparent; cursor:pointer; text-align:left; border-top:0.5px solid var(--border); transition:background .15s; }
+  .row:first-child{ border-top:none; }
+  .row:active{ background:var(--surface-2); }
+  .row .r-ico{ flex:0 0 auto; width:30px; height:30px; border-radius:8px; background:var(--surface-2); color:var(--muted); display:grid; place-items:center; }
+  .row .r-mid{ flex:1 1 auto; min-width:0; }
+  .row .r-lbl{ font:500 15px/1.3 var(--font-body); color:var(--fg); }
+  .row .r-val{ font-size:13.5px; color:var(--faint); margin-top:2px; }
+  .row .r-chev{ color:var(--faint); flex:0 0 auto; }
+  .row .r-val-inline{ font:500 13.5px/1 var(--font-body); color:var(--muted); flex:0 0 auto; margin-right:4px; }
+
+  /* toggle row */
+  .row.toggle .r-chev{ display:none; }
+  .switch{ flex:0 0 auto; width:48px; height:29px; border-radius:99px; background:var(--surface-3); position:relative; transition:.2s; }
+  .switch::after{ content:""; position:absolute; top:2px; left:2px; width:25px; height:25px; border-radius:50%; background:#fff; box-shadow:0 1px 3px oklch(20% 0.02 150/.25); transition:.22s cubic-bezier(.22,.61,.36,1); }
+  .row.toggle[aria-checked="true"] .switch{ background:var(--accent); }
+  .row.toggle[aria-checked="true"] .switch::after{ transform:translateX(19px); }
+
+  /* plus card */
+  .plus-card{ background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius-card); padding:18px; cursor:pointer; }
+  .plus-card .pl-badge{ display:inline-flex; align-items:center; gap:5px; font:600 11px/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; color:var(--plus); margin-bottom:8px; }
+  .plus-card .pl-badge svg{ width:13px; height:13px; }
+  .plus-card h4{ font:600 16px/1.25 var(--font-display); letter-spacing:-0.01em; color:var(--fg-strong); }
+  .plus-card p{ margin-top:5px; font-size:13.5px; line-height:1.5; color:var(--muted); }
+
+  /* danger row */
+  .row.danger .r-lbl{ color:var(--danger); }
+  .row.danger .r-ico{ color:var(--danger); background:oklch(96% 0.04 25); }
+
+  /* safety exit (prominent) */
+  .exit-card{ background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius-card); padding:18px; margin-top:16px; text-align:center; }
+  .exit-card .ex-ico{ width:44px; height:44px; border-radius:50%; background:var(--accent-tint); color:var(--accent); display:grid; place-items:center; margin:0 auto 12px; }
+  .exit-card h4{ font:600 16px/1.25 var(--font-display); color:var(--fg-strong); }
+  .exit-card p{ margin-top:6px; font-size:13.5px; line-height:1.5; color:var(--muted); }
+  .exit-card .btn{ margin-top:14px; }
+
+  /* buttons */
+  .btn{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; height:54px; border:none; cursor:pointer; border-radius:var(--radius-btn); font:600 16px/1 var(--font-display); letter-spacing:-0.01em; transition:transform .12s, background .15s; }
+  .btn:active{ transform:scale(.985); }
+  .btn-primary{ background:var(--accent); color:var(--accent-fg); }
+  .btn-primary:active{ background:var(--accent-press); }
+  .btn-quiet{ background:transparent; border:1px solid var(--border); color:var(--fg); }
+  .btn-quiet:active{ background:var(--surface-2); }
+  .btn-danger{ background:transparent; border:1px solid oklch(80% 0.05 25); color:var(--danger); }
+
+  .foot{ margin-top:22px; text-align:center; font-size:12px; color:var(--faint); line-height:1.6; }
+  .foot .ver{ font-variant-numeric:tabular-nums; }
+
+  /* tabbar */
+  .tabbar{ flex:0 0 auto; height:var(--tab-h); border-top:0.5px solid var(--border); display:flex; align-items:flex-start; padding:8px 0 18px; background:color-mix(in oklch, var(--bg) 86%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .tab{ flex:1; border:none; background:transparent; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; color:var(--faint); padding-top:6px; transition:color .15s; text-decoration:none; }
+  .tab.active{ color:var(--accent); }
+  .tab svg{ width:24px; height:24px; }
+  .tab span{ font:600 11px/1 var(--font-body); letter-spacing:.01em; }
+  .tab.active span{ color:var(--fg-strong); }
+
+  /* sheet */
+  .sheet-backdrop{ position:absolute; inset:0; background:oklch(20% 0.02 150 / 0.4); z-index:40; opacity:0; pointer-events:none; transition:opacity .25s; }
+  .sheet-backdrop.show{ opacity:1; pointer-events:auto; }
+  .sheet{ position:absolute; left:0; right:0; bottom:0; z-index:41; background:var(--bg); border-radius:26px 26px 0 0; padding:10px 22px calc(28px + env(safe-area-inset-bottom)); transform:translateY(100%); transition:transform .32s cubic-bezier(.22,.61,.36,1); max-height:88%; overflow-y:auto; }
+  .sheet.show{ transform:translateY(0); }
+  .sheet .grab{ width:40px; height:5px; border-radius:3px; background:var(--border-strong); margin:0 auto 18px; }
+  .sheet h3{ font:600 22px/1.2 var(--font-display); letter-spacing:-0.02em; color:var(--fg-strong); }
+  .sheet .sheet-sub{ margin-top:8px; font-size:14.5px; line-height:1.5; color:var(--muted); }
+  .sheet-section-title{ font:600 13px/1.3 var(--font-display); color:var(--muted); margin:20px 0 10px; }
+
+  /* language options */
+  .opt-list{ display:flex; flex-direction:column; gap:8px; }
+  .opt{ display:flex; align-items:center; gap:14px; width:100%; text-align:left; padding:15px 16px; border-radius:var(--radius-row); background:var(--surface); border:1.5px solid var(--border); cursor:pointer; transition:border-color .15s; }
+  .opt:active{ transform:scale(.99); }
+  .opt .o-lbl{ flex:1; font-size:16px; color:var(--fg); }
+  .opt .o-lbl small{ display:block; font-size:12.5px; color:var(--faint); margin-top:2px; font-weight:400; }
+  .opt .radio{ flex:0 0 auto; width:22px; height:22px; border-radius:50%; border:2px solid var(--border-strong); display:grid; place-items:center; transition:.15s; }
+  .opt .radio svg{ opacity:0; transform:scale(.4); transition:.18s; }
+  .opt[aria-checked="true"]{ border-color:var(--accent); }
+  .opt[aria-checked="true"] .radio{ background:var(--accent); border-color:var(--accent); }
+  .opt[aria-checked="true"] .radio svg{ opacity:1; transform:scale(1); }
+
+  /* unit seg */
+  .seg-control{ display:flex; background:var(--surface-2); border-radius:12px; padding:3px; gap:3px; }
+  .seg-control button{ flex:1; height:40px; border:none; background:transparent; border-radius:9px; cursor:pointer; font:600 13px/1 var(--font-display); color:var(--muted); transition:.15s; }
+  .seg-control button[aria-selected="true"]{ background:var(--surface); color:var(--fg); box-shadow:0 1px 2px oklch(20% 0.02 150 / .08); }
+  .sheet-actions{ display:flex; gap:10px; margin-top:22px; }
+  .sheet-actions .btn{ flex:1; }
+  .sheet-actions .btn-danger{ flex:1; }
+
+  .toast{ position:absolute; left:50%; bottom:calc(var(--tab-h) + 18px); transform:translateX(-50%) translateY(20px); background:var(--fg-strong); color:var(--bg); padding:11px 18px; border-radius:99px; font:600 13px/1 var(--font-body); opacity:0; pointer-events:none; transition:.28s cubic-bezier(.22,.61,.36,1); z-index:50; white-space:nowrap; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (max-width: 440px){ body{ padding:0; background:var(--bg); } .phone{ width:100vw; height:100dvh; border-radius:0; box-shadow:none; } }
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+  <div class="island"></div>
+  <div class="statusbar">
+    <span class="sb-time" data-i18n="status.time">上午8:00</span>
+    <span class="sb-right">
+      <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="6" width="3" height="6" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1" fill-opacity=".35"/></svg>
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><path d="M8.5 11.5l2-2a2.8 2.8 0 00-4 0l2 2zM4 7a6.4 6.4 0 019 0l-1.4 1.4a4.4 4.4 0 00-6.2 0L4 7zM0 3.1a12.7 12.7 0 0117 0l-1.4 1.4a10.7 10.7 0 00-14.2 0L0 3.1z"/></svg>
+      <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0.5" y="0.5" width="22" height="11" rx="3" stroke="currentColor" stroke-opacity=".4"/><rect x="2" y="2" width="17" height="8" rx="1.6" fill="currentColor"/><rect x="24" y="4" width="1.6" height="4" rx="0.8" fill="currentColor" fill-opacity=".4"/></svg>
+    </span>
+  </div>
+
+  <div class="screen">
+    <header class="header">
+      <div>
+        <span class="date" data-i18n="today.date">7月22日 周三</span>
+        <div class="title" data-i18n="me.title">我的</div>
+      </div>
+      <button class="icon-btn" id="langBtn" aria-label="语言"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg></button>
+    </header>
+
+    <div class="body" id="body">
+      <!-- user -->
+      <div class="user-card">
+        <div class="avatar" data-i18n="me.avatar">L</div>
+        <div class="user-meta">
+          <div class="name" data-i18n="me.guest">Lighter 用户</div>
+          <div class="sub"><span class="pill" data-i18n="me.plan.gentle">12:12</span><span data-i18n="me.since">加入 7 天</span></div>
+        </div>
+        <button class="user-edit" aria-label="编辑"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+      </div>
+
+      <!-- group: plan & preferences -->
+      <div class="sec-label" data-i18n="me.sec.plan">计划与偏好</div>
+      <div class="group">
+        <button class="row" id="planRow"><span class="r-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="r-mid"><span class="r-lbl" data-i18n="me.plan">当前计划</span></span><span class="r-val-inline" id="planVal">12:12</span><svg class="r-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+        <button class="row" id="remindRow"><span class="r-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 6-2 8-2 8h16s-2-2-2-8z"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></span><span class="r-mid"><span class="r-lbl" data-i18n="me.reminders">提醒设置</span></span><svg class="r-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+        <button class="row" id="langRow"><span class="r-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg></span><span class="r-mid"><span class="r-lbl" data-i18n="settings.language">语言</span></span><span class="r-val-inline" id="langVal">简体中文</span><svg class="r-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+        <button class="row" id="unitRow"><span class="r-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l18-6-6 18-2.5-7.5L3 9z"/></svg></span><span class="r-mid"><span class="r-lbl" data-i18n="me.units">单位与显示</span></span><span class="r-val-inline" id="unitVal">美制 · 磅</span><svg class="r-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      </div>
+
+      <!-- plus -->
+      <div class="sec-label" data-i18n="me.sec.plus">Lighter Plus</div>
+      <div class="plus-card" id="plusCard">
+        <div class="pl-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.6 5.7 21l2.3-7.2-6-4.4h7.6z"/></svg><span>Lighter Plus</span></div>
+        <h4 data-i18n="me.plus.title">解锁每周洞察与更多</h4>
+        <p data-i18n="me.plus.desc">核心计时永远免费。Plus 提供趋势洞察与个性化建议，可选订阅。</p>
+      </div>
+
+      <!-- group: account -->
+      <div class="sec-label" data-i18n="me.sec.account">账号与安全</div>
+      <div class="group">
+        <button class="row" id="accountRow"><span class="r-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg></span><span class="r-mid"><span class="r-lbl" data-i18n="me.account">账号与同步</span></span><svg class="r-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+        <button class="row" id="learnRow"><span class="r-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></span><span class="r-mid"><span class="r-lbl" data-i18n="me.safety">学习与安全</span></span><svg class="r-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+        <button class="row" id="privacyRow"><span class="r-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg></span><span class="r-mid"><span class="r-lbl" data-i18n="me.privacy">隐私设置</span></span><svg class="r-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      </div>
+
+      <!-- group: data -->
+      <div class="sec-label" data-i18n="me.sec.data">数据</div>
+      <div class="group">
+        <button class="row" id="exportRow"><span class="r-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg></span><span class="r-mid"><span class="r-lbl" data-i18n="me.export">导出数据</span></span><svg class="r-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+        <button class="row danger" id="deleteRow"><span class="r-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2"/><path d="M6 6l1 14a2 2 0 002 2h6a2 2 0 002-2l1-14"/></svg></span><span class="r-mid"><span class="r-lbl" data-i18n="me.delete">删除数据或账号</span></span><svg class="r-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      </div>
+
+      <!-- safety exit -->
+      <div class="exit-card">
+        <div class="ex-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></div>
+        <h4 data-i18n="me.exit.title">随时可以暂停</h4>
+        <p data-i18n="me.exit.desc">需要休息一段时间也没关系。你的计划会保留，回来时从原地继续。</p>
+        <button class="btn btn-quiet" id="exitBtn" data-i18n="me.exit.btn">暂停断食计划</button>
+      </div>
+
+      <div class="foot">
+        <div class="ver">Lighter · v1.0.0</div>
+        <div data-i18n="me.disclaimer">不是医疗设备，不提供医疗诊断或建议。</div>
+      </div>
+    </div>
+
+    <nav class="tabbar">
+      <a class="tab" href="today.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span data-i18n="tab.today">今日</span></a>
+      <a class="tab" href="progress.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16v-4"/><path d="M12 16V8"/><path d="M16 16v-6"/></svg><span data-i18n="tab.progress">进度</span></a>
+      <a class="tab active" href="me.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg><span data-i18n="tab.me">我的</span></a>
+    </nav>
+  </div>
+
+  <!-- language sheet -->
+  <div class="sheet-backdrop" id="langBackdrop"></div>
+  <div class="sheet" id="langSheet">
+    <div class="grab"></div>
+    <h3 data-i18n="me.lang.title">语言</h3>
+    <p class="sheet-sub" data-i18n="me.lang.desc">切换后当前页面立即刷新，不影响计时和数据。选"跟随系统"会跟随设备语言。</p>
+    <div class="sheet-section-title" data-i18n="me.lang.choose">选择语言</div>
+    <div class="opt-list" id="langOpts">
+      <button class="opt" data-lang="system" aria-checked="false"><span class="o-lbl"><span data-i18n="me.lang.system">跟随系统</span><small data-i18n="me.lang.system.d">按设备语言自动切换</small></span><span class="radio"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+      <button class="opt" data-lang="zh" aria-checked="true"><span class="o-lbl"><span>简体中文</span><small data-i18n="me.lang.zh.d">开发与测试默认</small></span><span class="radio"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+      <button class="opt" data-lang="en" aria-checked="false"><span class="o-lbl"><span>English</span><small data-i18n="me.lang.en.d">US English</small></span><span class="radio"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-quiet" id="langCancel" data-i18n="common.close">关闭</button>
+    </div>
+  </div>
+
+  <!-- units sheet -->
+  <div class="sheet-backdrop" id="unitBackdrop"></div>
+  <div class="sheet" id="unitSheet">
+    <div class="grab"></div>
+    <h3 data-i18n="me.units">单位与显示</h3>
+    <p class="sheet-sub" data-i18n="me.units.desc">体重、液体单位会同步切换，不影响已记录的数据。</p>
+    <div class="sheet-section-title" data-i18n="me.units.weight">体重单位</div>
+    <div class="seg-control" id="unitSeg">
+      <button aria-selected="true" data-unit="us" data-i18n="me.units.us">美制 · 磅</button>
+      <button aria-selected="false" data-unit="metric" data-i18n="me.units.metric">公制 · 千克</button>
+    </div>
+    <div class="sheet-section-title" data-i18n="me.units.liquid">液体单位</div>
+    <div class="seg-control" id="liqSeg">
+      <button aria-selected="true" data-liq="us" data-i18n="me.units.floz">液体盎司</button>
+      <button aria-selected="false" data-liq="metric" data-i18n="me.units.ml">毫升</button>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-quiet" id="unitCancel" data-i18n="common.cancel">取消</button>
+      <button class="btn btn-primary" id="unitSave" data-i18n="common.save">保存</button>
+    </div>
+  </div>
+
+  <!-- delete confirm sheet -->
+  <div class="sheet-backdrop" id="delBackdrop"></div>
+  <div class="sheet" id="delSheet">
+    <div class="grab"></div>
+    <h3 data-i18n="me.del.title" style="color:var(--danger)">删除数据或账号</h3>
+    <p class="sheet-sub" data-i18n="me.del.desc">此操作不可撤销。删除后所有断食记录、体重数据和计划将永久丢失。账号删除后将无法恢复。</p>
+    <div class="sheet-section-title" data-i18n="me.del.choose">选择删除范围</div>
+    <div class="opt-list" id="delOpts">
+      <button class="opt" data-del="data" aria-checked="false"><span class="o-lbl"><span data-i18n="me.del.data">仅清空数据</span><small data-i18n="me.del.data.d">保留账号，清空所有记录</small></span><span class="radio"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+      <button class="opt" data-del="account" aria-checked="false"><span class="o-lbl"><span data-i18n="me.del.account">删除账号与全部数据</span><small data-i18n="me.del.account.d">永久删除，无法恢复</small></span><span class="radio"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-quiet" id="delCancel" data-i18n="common.cancel">取消</button>
+      <button class="btn btn-danger" id="delConfirm" data-i18n="me.del.confirm">确认删除</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div class="home-indicator"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var I18N = {
+    zh:{
+      "status.time":"上午8:00","today.date":"7月22日 周三",
+      "me.title":"我的","me.avatar":"L","me.guest":"Lighter 用户","me.plan.gentle":"12:12","me.since":"加入 7 天",
+      "me.sec.plan":"计划与偏好","me.plan":"当前计划","me.reminders":"提醒设置","settings.language":"语言","me.units":"单位与显示",
+      "me.sec.plus":"Lighter Plus","me.plus.title":"解锁每周洞察与更多","me.plus.desc":"核心计时永远免费。Plus 提供趋势洞察与个性化建议，可选订阅。",
+      "me.sec.account":"账号与安全","me.account":"账号与同步","me.safety":"学习与安全","me.privacy":"隐私设置",
+      "me.sec.data":"数据","me.export":"导出数据","me.delete":"删除数据或账号",
+      "me.exit.title":"随时可以暂停","me.exit.desc":"需要休息一段时间也没关系。你的计划会保留，回来时从原地继续。","me.exit.btn":"暂停断食计划",
+      "me.disclaimer":"不是医疗设备，不提供医疗诊断或建议。",
+      "me.lang.title":"语言","me.lang.desc":"切换后当前页面立即刷新，不影响计时和数据。选"跟随系统"会跟随设备语言。","me.lang.choose":"选择语言",
+      "me.lang.system":"跟随系统","me.lang.system.d":"按设备语言自动切换","me.lang.zh.d":"开发与测试默认","me.lang.en.d":"US English",
+      "me.units.desc":"体重、液体单位会同步切换，不影响已记录的数据。","me.units.weight":"体重单位","me.units.us":"美制 · 磅","me.units.metric":"公制 · 千克","me.units.liquid":"液体单位","me.units.floz":"液体盎司","me.units.ml":"毫升",
+      "me.del.title":"删除数据或账号","me.del.desc":"此操作不可撤销。删除后所有断食记录、体重数据和计划将永久丢失。账号删除后将无法恢复。","me.del.choose":"选择删除范围","me.del.data":"仅清空数据","me.del.data.d":"保留账号，清空所有记录","me.del.account":"删除账号与全部数据","me.del.account.d":"永久删除，无法恢复","me.del.confirm":"确认删除",
+      "common.cancel":"取消","common.save":"保存","common.close":"关闭","tab.today":"今日","tab.progress":"进度","tab.me":"我的",
+      "toast.lang":"语言已切换","toast.saved":"已保存","toast.deleted":"数据已删除","toast.exit":"已暂停，随时回来","toast.coming":"即将交付",
+      "lang.zh":"简体中文","lang.en":"English","lang.system":"跟随系统"
+    },
+    en:{
+      "status.time":"8:00 AM","today.date":"Wed, Jul 22",
+      "me.title":"Me","me.avatar":"L","me.guest":"Lighter user","me.plan.gentle":"12:12","me.since":"Joined 7 days",
+      "me.sec.plan":"Plan & preferences","me.plan":"Current plan","me.reminders":"Reminders","settings.language":"Language","me.units":"Units & display",
+      "me.sec.plus":"Lighter Plus","me.plus.title":"Unlock weekly insights & more","me.plus.desc":"The core timer is always free. Plus adds trend insights and personalized tips - optional subscription.",
+      "me.sec.account":"Account & safety","me.account":"Account & sync","me.safety":"Learn & safety","me.privacy":"Privacy",
+      "me.sec.data":"Data","me.export":"Export data","me.delete":"Delete data or account",
+      "me.exit.title":"Pause anytime","me.exit.desc":"Need a break? That's fine. Your plan stays - pick up where you left off when you return.","me.exit.btn":"Pause my plan",
+      "me.disclaimer":"Not a medical device. No diagnosis or medical advice.",
+      "me.lang_title":"Language","me.lang.desc":"Switching refreshes this page instantly - no restart, no data loss. \"System\" follows your device.","me.lang.choose":"Choose language",
+      "me.lang.system":"System default","me.lang.system.d":"Follows your device language","me.lang.zh.d":"Default for dev & testing","me.lang.en.d":"US English",
+      "me.units.desc":"Weight and liquid units sync - your logged data is unaffected.","me.units.weight":"Weight unit","me.units.us":"Imperial · lb","me.units.metric":"Metric · kg","me.units.liquid":"Liquid unit","me.units.floz":"Fluid ounces","me.units.ml":"Milliliters",
+      "me.del.title":"Delete data or account","me.del.desc":"This can't be undone. All fasting records, weight data, and plans will be permanently lost. Account deletion is irreversible.","me.del.choose":"Choose scope","me.del.data":"Clear data only","me.del.data.d":"Keep account, wipe records","me.del.account":"Delete account & all data","me.del.account.d":"Permanent, cannot be undone","me.del.confirm":"Confirm delete",
+      "common.cancel":"Cancel","common.save":"Save","common.close":"Close","tab.today":"Today","tab.progress":"Progress","tab.me":"Me",
+      "toast.lang":"Language switched","toast.saved":"Saved","toast.deleted":"Data deleted","toast.exit":"Paused - come back anytime","toast.coming":"Coming soon",
+      "lang.zh":"简体中文","lang.en":"English","lang.system":"System"
+    }
+  };
+  var STORE_LANG="lighter:lang";
+  var langPref = localStorage.getItem(STORE_LANG) || "zh"; // zh | en | system
+  var lang = langPref==="system" ? "en" : langPref; // 当前显示语言
+  function t(k){ var v=I18N[lang][k]; if(v===undefined){ v=I18N.zh[k]; if(v===undefined && I18N.en[k]!==undefined) v=I18N.en[k]; } return v; }
+  function applyLang(){
+    document.documentElement.lang = lang==="zh"?"zh-CN":"en-US";
+    document.querySelectorAll("[data-i18n]").forEach(function(n){
+      var k=n.getAttribute("data-i18n"); var v=t(k); if(v===undefined) return;
+      if(n.children.length){ var replaced=false; for(var i=0;i<n.childNodes.length;i++){ if(n.childNodes[i].nodeType===3){ n.childNodes[i].nodeValue=v; replaced=true; break; } } if(!replaced) n.textContent=v; }
+      else n.textContent=v;
+    });
+    // header lang按钮: 直接全量切换 zh<->en (sheet 里才提供 system 选项)
+    document.getElementById("langVal").textContent = t("lang."+lang);
+    // unit val
+    document.getElementById("unitVal").textContent = t("me.units."+(window.__unitPref||"us"));
+  }
+  window.__unitPref = localStorage.getItem("lighter:unit") || "us";
+
+  /* sheets */
+  function openSheet(b,s){ document.getElementById(b).classList.add("show"); document.getElementById(s).classList.add("show"); }
+  function closeSheet(b,s){ document.getElementById(b).classList.remove("show"); document.getElementById(s).classList.remove("show"); }
+
+  /* language sheet */
+  document.getElementById("langRow").addEventListener("click", function(){ syncLangOpts(); openSheet("langBackdrop","langSheet"); });
+  document.getElementById("langBackdrop").addEventListener("click", function(){ closeSheet("langBackdrop","langSheet"); });
+  document.getElementById("langCancel").addEventListener("click", function(){ closeSheet("langBackdrop","langSheet"); });
+  function syncLangOpts(){
+    document.querySelectorAll("#langOpts .opt").forEach(function(o){
+      o.setAttribute("aria-checked", o.getAttribute("data-lang")===langPref?"true":"false");
+    });
+  }
+  document.querySelectorAll("#langOpts .opt").forEach(function(o){
+    o.addEventListener("click", function(){
+      var choice = o.getAttribute("data-lang");
+      langPref = choice;
+      lang = choice==="system" ? "en" : choice;
+      try{ localStorage.setItem(STORE_LANG, langPref); }catch(e){}
+      syncLangOpts();
+      applyLang();
+      toast(t("toast.lang"));
+    });
+  });
+
+  /* top lang button: direct toggle zh<->en */
+  document.getElementById("langBtn").addEventListener("click", function(){
+    langPref = lang==="zh"?"en":"zh";
+    lang = langPref;
+    try{ localStorage.setItem(STORE_LANG, langPref); }catch(e){}
+    applyLang();
+    toast(t("toast.lang"));
+  });
+
+  /* units sheet */
+  document.getElementById("unitRow").addEventListener("click", function(){ syncUnitSeg(); openSheet("unitBackdrop","unitSheet"); });
+  document.getElementById("unitBackdrop").addEventListener("click", function(){ closeSheet("unitBackdrop","unitSheet"); });
+  document.getElementById("unitCancel").addEventListener("click", function(){ closeSheet("unitBackdrop","unitSheet"); });
+  document.getElementById("unitSave").addEventListener("click", function(){
+    window.__unitPref = currentUnitSeg;
+    try{ localStorage.setItem("lighter:unit", currentUnitSeg); }catch(e){}
+    closeSheet("unitBackdrop","unitSheet"); applyLang(); toast(t("toast.saved"));
+  });
+  var currentUnitSeg = "us";
+  function syncUnitSeg(){
+    document.querySelectorAll("#unitSeg button").forEach(function(b){ b.setAttribute("aria-selected", b.getAttribute("data-unit")===currentUnitSeg?"true":"false"); });
+  }
+  document.querySelectorAll("#unitSeg button").forEach(function(b){
+    b.addEventListener("click", function(){ currentUnitSeg=b.getAttribute("data-unit"); syncUnitSeg(); });
+  });
+  var currentLiq = "us";
+  document.querySelectorAll("#liqSeg button").forEach(function(b){
+    b.addEventListener("click", function(){ currentLiq=b.getAttribute("data-liq"); document.querySelectorAll("#liqSeg button").forEach(function(x){ x.setAttribute("aria-selected", x===b?"true":"false"); }); });
+  });
+
+  /* delete sheet */
+  document.getElementById("deleteRow").addEventListener("click", function(){ openSheet("delBackdrop","delSheet"); });
+  document.getElementById("delBackdrop").addEventListener("click", function(){ closeSheet("delBackdrop","delSheet"); });
+  document.getElementById("delCancel").addEventListener("click", function(){ closeSheet("delBackdrop","delSheet"); });
+  document.getElementById("delConfirm").addEventListener("click", function(){ closeSheet("delBackdrop","delSheet"); toast(t("toast.deleted")); });
+  document.querySelectorAll("#delOpts .opt").forEach(function(o){
+    o.addEventListener("click", function(){
+      document.querySelectorAll("#delOpts .opt").forEach(function(x){ x.setAttribute("aria-checked","false"); });
+      o.setAttribute("aria-checked","true");
+    });
+  });
+
+  /* other rows -> coming soon toast */
+  ["planRow","remindRow","accountRow","learnRow","privacyRow","exportRow","plusCard"].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.addEventListener("click", function(){ toast(t("toast.coming")); });
+  });
+
+  /* exit */
+  document.getElementById("exitBtn").addEventListener("click", function(){ toast(t("toast.exit")); });
+
+  /* toast */
+  var toastTimer;
+  function toast(msg){ var el=document.getElementById("toast"); el.textContent=msg; el.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(function(){ el.classList.remove("show"); },1800); }
+
+  applyLang();
+})();
+</script>
+</body>
+</html>

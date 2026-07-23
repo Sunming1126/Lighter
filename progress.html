@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>Lighter · 进度</title>
+<style>
+  /* ============================================================
+     Lighter design tokens - 与 onboarding.html / today.html 一致
+     ============================================================ */
+  :root{
+    --bg:          oklch(98.5% 0.004 140);
+    --surface:     oklch(100% 0.002 140);
+    --surface-2:   oklch(96.8% 0.005 140);
+    --surface-3:   oklch(94.5% 0.006 140);
+    --fg:          oklch(22% 0.012 150);
+    --fg-strong:   oklch(14% 0.012 150);
+    --muted:       oklch(50% 0.012 150);
+    --faint:       oklch(68% 0.010 150);
+    --border:      oklch(92% 0.005 140);
+    --border-strong: oklch(86% 0.008 140);
+    --accent:      oklch(56% 0.075 165);
+    --accent-press:oklch(50% 0.078 165);
+    --accent-fg:   oklch(100% 0 0);
+    --accent-tint: oklch(96% 0.022 165);
+    --accent-soft: oklch(90% 0.030 165);
+    --eat:         oklch(70% 0.05 60);
+    --plus:        oklch(40% 0.06 250);
+
+    --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Segoe UI', system-ui, sans-serif;
+    --font-body:    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Segoe UI', system-ui, sans-serif;
+
+    --radius-card: 22px; --radius-row: 16px; --radius-btn: 18px;
+    --safe-x: 22px; --tab-h: 82px;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{
+    background: oklch(90% 0.004 150); font-family: var(--font-body); color: var(--fg);
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    display:flex; align-items:center; justify-content:center; min-height:100dvh; padding:24px;
+  }
+  .phone{ position:relative; width:390px; height:844px; background:var(--bg); border-radius:54px; box-shadow: 0 0 0 12px oklch(18% 0.01 150), 0 0 0 14px oklch(40% 0.01 150), 0 40px 80px -20px oklch(20% 0.04 250 / 0.45); overflow:hidden; isolation:isolate; }
+  .island{ position:absolute; top:11px; left:50%; transform:translateX(-50%); width:120px; height:34px; background:#000; border-radius:20px; z-index:30; }
+  .statusbar{ position:absolute; top:0; left:0; right:0; height:54px; display:flex; align-items:center; justify-content:space-between; padding:18px 32px 0; z-index:25; font-family:var(--font-display); font-weight:600; font-size:15px; color:var(--fg); letter-spacing:-0.01em; }
+  .statusbar .sb-time{ font-variant-numeric: tabular-nums; }
+  .statusbar .sb-right{ display:flex; align-items:center; gap:6px; }
+  .statusbar svg{ display:block; }
+  .home-indicator{ position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:134px; height:5px; border-radius:3px; background:var(--fg); opacity:.85; z-index:30; }
+
+  .screen{ position:absolute; inset:0; padding-top:54px; display:flex; flex-direction:column; }
+  .header{ flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:8px var(--safe-x) 8px; min-height:44px; }
+  .header .h-left{ display:flex; flex-direction:column; }
+  .header .date{ font:600 12px/1 var(--font-display); letter-spacing:.08em; text-transform:uppercase; color:var(--faint); }
+  .header .title{ font:600 22px/1.1 var(--font-display); letter-spacing:-0.02em; color:var(--fg-strong); margin-top:3px; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; border:none; background:var(--surface-2); color:var(--muted); display:grid; place-items:center; cursor:pointer; transition:background .15s, color .15s; }
+  .icon-btn:active{ background:var(--surface-3); }
+  .body{ flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:4px var(--safe-x) 20px; }
+  .body::-webkit-scrollbar{ width:0; }
+
+  /* overview */
+  .overview{ background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius-card); padding:20px 18px 18px; }
+  .ov-top{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; }
+  .ov-title{ font:600 13px/1 var(--font-display); letter-spacing:.04em; color:var(--muted); }
+  .ov-range{ font:600 12px/1 var(--font-display); letter-spacing:.02em; color:var(--faint); background:var(--surface-2); padding:5px 10px; border-radius:99px; cursor:pointer; border:none; }
+  .ov-stats{ display:flex; gap:8px; }
+  .ov-stat{ flex:1; }
+  .ov-stat .n{ font:600 30px/1 var(--font-display); letter-spacing:-0.03em; color:var(--fg-strong); font-variant-numeric:tabular-nums; }
+  .ov-stat .n small{ font-size:14px; color:var(--faint); font-weight:500; margin-left:2px; }
+  .ov-stat .l{ margin-top:6px; font-size:11.5px; color:var(--muted); letter-spacing:.02em; }
+  .ov-note{ margin-top:16px; padding-top:14px; border-top:0.5px solid var(--border); font-size:13px; line-height:1.5; color:var(--muted); }
+
+  /* module */
+  .mod{ margin-top:18px; }
+  .mod-head{ display:flex; align-items:baseline; justify-content:space-between; margin:0 2px 10px; }
+  .mod-title{ font:600 17px/1.2 var(--font-display); letter-spacing:-0.01em; color:var(--fg-strong); }
+  .mod-link{ font:600 13px/1 var(--font-body); color:var(--muted); cursor:pointer; background:none; border:none; }
+  .mod-link:active{ color:var(--fg); }
+
+  /* calendar */
+  .cal-card{ background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius-card); padding:16px 16px 18px; }
+  .cal-nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .cal-month{ font:600 16px/1 var(--font-display); letter-spacing:-0.01em; color:var(--fg-strong); }
+  .cal-arrow{ width:30px; height:30px; border-radius:50%; border:none; background:var(--surface-2); color:var(--muted); display:grid; place-items:center; cursor:pointer; }
+  .cal-arrow:active{ background:var(--surface-3); }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px 0; }
+  .cal-grid .dow{ font:600 10px/1 var(--font-display); letter-spacing:.04em; text-transform:uppercase; color:var(--faint); text-align:center; padding-bottom:8px; }
+  .cal-cell{ aspect-ratio:1; display:flex; align-items:center; justify-content:center; position:relative; }
+  .cal-cell .num{ font:500 13px/1 var(--font-body); color:var(--muted); }
+  .cal-cell.today .num{ color:var(--fg-strong); font-weight:600; }
+  .cal-cell .dot{ position:absolute; bottom:5px; width:5px; height:5px; border-radius:50%; }
+  .cal-cell.done .dot{ background:var(--accent); }
+  .cal-cell.partial .dot{ background:var(--accent-soft); }
+  .cal-cell.rest .dot{ border:1px dashed var(--border-strong); background:transparent; width:5px; height:5px; }
+  .cal-cell.today::after{ content:""; position:absolute; inset:3px; border-radius:9px; border:1.5px solid var(--accent); }
+  .cal-legend{ display:flex; gap:14px; margin-top:14px; padding-top:13px; border-top:0.5px solid var(--border); flex-wrap:wrap; }
+  .cal-legend .lg{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--muted); }
+  .cal-legend .lg .d{ width:7px; height:7px; border-radius:50%; }
+
+  /* weight */
+  .weight-card{ background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius-card); padding:18px; }
+  .wt-top{ display:flex; align-items:flex-end; justify-content:space-between; }
+  .wt-cur .n{ font:600 34px/1 var(--font-display); letter-spacing:-0.03em; color:var(--fg-strong); font-variant-numeric:tabular-nums; }
+  .wt-cur .u{ font:600 13px/1 var(--font-body); color:var(--faint); margin-left:3px; }
+  .wt-add{ height:38px; padding:0 16px; border-radius:99px; border:1px solid var(--border); background:var(--surface); color:var(--fg); font:600 13px/1 var(--font-display); cursor:pointer; display:inline-flex; align-items:center; gap:5px; }
+  .wt-add:active{ background:var(--surface-2); }
+  .wt-chart{ margin-top:14px; }
+  .wt-chart svg{ width:100%; height:90px; display:block; overflow:visible; }
+  .wt-meta{ display:flex; justify-content:space-between; margin-top:8px; font-size:11px; color:var(--faint); letter-spacing:.02em; }
+  .wt-note{ margin-top:12px; font-size:12.5px; color:var(--muted); }
+
+  /* history list */
+  .hist{ display:flex; flex-direction:column; }
+  .hist-item{ display:flex; align-items:center; gap:13px; padding:14px 2px; border-top:0.5px solid var(--border); cursor:pointer; }
+  .hist-item:first-child{ border-top:none; }
+  .hist-item:active{ background:var(--surface-2); }
+  .hist-date{ flex:0 0 auto; width:46px; text-align:center; }
+  .hist-date .d{ font:600 18px/1 var(--font-display); color:var(--fg-strong); letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
+  .hist-date .m{ font:500 10.5px/1 var(--font-body); color:var(--faint); margin-top:3px; letter-spacing:.02em; }
+  .hist-mid{ flex:1 1 auto; }
+  .hist-mid .plan{ font:600 15px/1.2 var(--font-display); color:var(--fg); }
+  .hist-mid .dur{ margin-top:3px; font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .hist-tag{ flex:0 0 auto; font:600 11px/1 var(--font-display); letter-spacing:.02em; padding:5px 9px; border-radius:99px; }
+  .hist-tag.done{ background:var(--accent-tint); color:var(--accent); }
+  .hist-tag.partial{ background:var(--surface-2); color:var(--muted); }
+  .hist-tag.rest{ background:transparent; color:var(--faint); border:1px solid var(--border); }
+
+  /* plus insight */
+  .plus-card{ background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius-card); padding:18px; position:relative; overflow:hidden; }
+  .plus-card .pl-badge{ display:inline-flex; align-items:center; gap:5px; font:600 11px/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; color:var(--plus); margin-bottom:10px; }
+  .plus-card .pl-badge svg{ width:13px; height:13px; }
+  .plus-card h4{ font:600 16px/1.25 var(--font-display); letter-spacing:-0.01em; color:var(--fg-strong); }
+  .plus-card p{ margin-top:6px; font-size:13.5px; line-height:1.5; color:var(--muted); }
+  .plus-card .pl-go{ margin-top:12px; font:600 13px/1 var(--font-body); color:var(--plus); display:inline-flex; align-items:center; gap:4px; }
+
+  /* tabbar */
+  .tabbar{ flex:0 0 auto; height:var(--tab-h); border-top:0.5px solid var(--border); display:flex; align-items:flex-start; padding:8px 0 18px; background:color-mix(in oklch, var(--bg) 86%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .tab{ flex:1; border:none; background:transparent; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; color:var(--faint); padding-top:6px; transition:color .15s; text-decoration:none; }
+  .tab.active{ color:var(--accent); }
+  .tab svg{ width:24px; height:24px; }
+  .tab span{ font:600 11px/1 var(--font-body); letter-spacing:.01em; }
+  .tab.active span{ color:var(--fg-strong); }
+
+  /* sheet */
+  .sheet-backdrop{ position:absolute; inset:0; background:oklch(20% 0.02 150 / 0.4); z-index:40; opacity:0; pointer-events:none; transition:opacity .25s; }
+  .sheet-backdrop.show{ opacity:1; pointer-events:auto; }
+  .sheet{ position:absolute; left:0; right:0; bottom:0; z-index:41; background:var(--bg); border-radius:26px 26px 0 0; padding:10px 22px calc(28px + env(safe-area-inset-bottom)); transform:translateY(100%); transition:transform .32s cubic-bezier(.22,.61,.36,1); max-height:88%; overflow-y:auto; }
+  .sheet.show{ transform:translateY(0); }
+  .sheet .grab{ width:40px; height:5px; border-radius:3px; background:var(--border-strong); margin:0 auto 18px; }
+  .sheet h3{ font:600 22px/1.2 var(--font-display); letter-spacing:-0.02em; color:var(--fg-strong); }
+  .sheet .sheet-sub{ margin-top:8px; font-size:14.5px; line-height:1.5; color:var(--muted); }
+  .sheet-section-title{ font:600 13px/1.3 var(--font-display); color:var(--muted); margin:20px 0 10px; }
+
+  /* detail sheet content */
+  .dt-top{ display:flex; align-items:baseline; justify-content:space-between; margin-top:4px; }
+  .dt-plan{ font:600 40px/1 var(--font-display); letter-spacing:-0.03em; color:var(--fg-strong); }
+  .dt-tag{ font:600 11px/1 var(--font-display); letter-spacing:.02em; padding:5px 9px; border-radius:99px; }
+  .dt-tag.done{ background:var(--accent-tint); color:var(--accent); }
+  .dt-tag.partial{ background:var(--surface-2); color:var(--muted); }
+  .dt-rows{ display:flex; flex-direction:column; margin-top:8px; }
+  .dt-row{ display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-top:0.5px solid var(--border); }
+  .dt-row:first-child{ border-top:none; }
+  .dt-row .k{ font-size:14.5px; color:var(--muted); }
+  .dt-row .v{ font:600 15px/1.2 var(--font-display); color:var(--fg); font-variant-numeric:tabular-nums; }
+  .dt-note{ margin-top:14px; padding:14px 16px; background:var(--surface-2); border-radius:14px; font-size:13.5px; line-height:1.5; color:var(--muted); }
+
+  /* weight input */
+  .wt-input-row{ display:flex; gap:10px; align-items:center; }
+  .wt-input-box{ flex:1; height:58px; background:var(--surface); border:1.5px solid var(--border); border-radius:14px; display:flex; align-items:center; padding:0 18px; gap:8px; }
+  .wt-input-box input{ flex:1; border:none; background:transparent; outline:none; font:600 22px/1 var(--font-display); color:var(--fg); font-variant-numeric:tabular-nums; }
+  .wt-input-box .u{ font-size:14px; color:var(--faint); }
+  .seg-control{ display:flex; background:var(--surface-2); border-radius:12px; padding:3px; gap:3px; }
+  .seg-control button{ flex:1; height:38px; border:none; background:transparent; border-radius:9px; cursor:pointer; font:600 13px/1 var(--font-display); color:var(--muted); transition:.15s; }
+  .seg-control button[aria-selected="true"]{ background:var(--surface); color:var(--fg); box-shadow:0 1px 2px oklch(20% 0.02 150 / .08); }
+  .sheet-actions{ display:flex; gap:10px; margin-top:22px; }
+  .sheet-actions .btn{ flex:1; }
+  .btn{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; height:56px; border:none; cursor:pointer; border-radius:var(--radius-btn); font:600 17px/1 var(--font-display); letter-spacing:-0.01em; transition:transform .12s, background .15s; }
+  .btn:active{ transform:scale(.985); }
+  .btn-primary{ background:var(--accent); color:var(--accent-fg); }
+  .btn-primary:active{ background:var(--accent-press); }
+  .btn-quiet{ background:transparent; border:1px solid var(--border); color:var(--fg); }
+  .btn-quiet:active{ background:var(--surface-2); }
+
+  .toast{ position:absolute; left:50%; bottom:calc(var(--tab-h) + 18px); transform:translateX(-50%) translateY(20px); background:var(--fg-strong); color:var(--bg); padding:11px 18px; border-radius:99px; font:600 13px/1 var(--font-body); letter-spacing:.01em; opacity:0; pointer-events:none; transition:.28s cubic-bezier(.22,.61,.36,1); z-index:50; white-space:nowrap; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (max-width: 440px){ body{ padding:0; background:var(--bg); } .phone{ width:100vw; height:100dvh; border-radius:0; box-shadow:none; } }
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+  <div class="island"></div>
+  <div class="statusbar">
+    <span class="sb-time" data-i18n="status.time">上午8:00</span>
+    <span class="sb-right">
+      <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="6" width="3" height="6" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1" fill-opacity=".35"/></svg>
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><path d="M8.5 11.5l2-2a2.8 2.8 0 00-4 0l2 2zM4 7a6.4 6.4 0 019 0l-1.4 1.4a4.4 4.4 0 00-6.2 0L4 7zM0 3.1a12.7 12.7 0 0117 0l-1.4 1.4a10.7 10.7 0 00-14.2 0L0 3.1z"/></svg>
+      <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0.5" y="0.5" width="22" height="11" rx="3" stroke="currentColor" stroke-opacity=".4"/><rect x="2" y="2" width="17" height="8" rx="1.6" fill="currentColor"/><rect x="24" y="4" width="1.6" height="4" rx="0.8" fill="currentColor" fill-opacity=".4"/></svg>
+    </span>
+  </div>
+
+  <div class="screen">
+    <header class="header">
+      <div class="h-left">
+        <span class="date" data-i18n="today.date">7月22日 周三</span>
+        <span class="title" data-i18n="progress.title">进度</span>
+      </div>
+      <button class="icon-btn" id="langBtn" aria-label="语言"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg></button>
+    </header>
+
+    <div class="body" id="body">
+
+      <!-- overview -->
+      <div class="overview">
+        <div class="ov-top">
+          <span class="ov-title" data-i18n="progress.overview">本周概览</span>
+          <button class="ov-range" id="rangeBtn" data-i18n="progress.range.week">本周</button>
+        </div>
+        <div class="ov-stats">
+          <div class="ov-stat"><div class="n" data-i18n="progress.done_n">3<small data-i18n="progress.done_unit"> / 5</small></div><div class="l" data-i18n="progress.completed_fasts">完成次数</div></div>
+          <div class="ov-stat"><div class="n" data-i18n="progress.avg_n">12<small>:00</small></div><div class="l" data-i18n="progress.avg_dur">平均时长</div></div>
+          <div class="ov-stat"><div class="n" data-i18n="progress.consist_n">60%</div><div class="l" data-i18n="progress.consistency">坚持度</div></div>
+        </div>
+        <div class="ov-note" data-i18n="progress.note">不追求每天，稳定就好。休息日也是计划的一部分。</div>
+      </div>
+
+      <!-- calendar -->
+      <div class="mod">
+        <div class="mod-head"><span class="mod-title" data-i18n="progress.calendar">断食日历</span></div>
+        <div class="cal-card">
+          <div class="cal-nav">
+            <button class="cal-arrow" id="calPrev" aria-label="上月"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+            <span class="cal-month" id="calMonth" data-i18n="progress.month.jul">7月</span>
+            <button class="cal-arrow" id="calNext" aria-label="下月"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+          <div class="cal-legend">
+            <span class="lg"><span class="d" style="background:var(--accent)"></span><span data-i18n="progress.lg.done">完成</span></span>
+            <span class="lg"><span class="d" style="background:var(--accent-soft)"></span><span data-i18n="progress.lg.partial">提前结束</span></span>
+            <span class="lg"><span class="d" style="border:1px dashed var(--border-strong);background:transparent"></span><span data-i18n="progress.lg.rest">休息日</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- weight -->
+      <div class="mod">
+        <div class="mod-head"><span class="mod-title" data-i18n="progress.weight">体重趋势</span><button class="mod-link" id="wtLog" data-i18n="progress.weight.log">详情 ›</button></div>
+        <div class="weight-card">
+          <div class="wt-top">
+            <div class="wt-cur"><span class="n" id="wtVal">158.2</span><span class="u" id="wtUnit">磅</span></div>
+            <button class="wt-add" id="wtAdd"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="progress.weight.add">记录</span></button>
+          </div>
+          <div class="wt-chart"><svg viewBox="0 0 320 90" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="wtFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="oklch(56% 0.075 165 / 0.16)"/>
+                <stop offset="100%" stop-color="oklch(56% 0.075 165 / 0)"/>
+              </linearGradient>
+            </defs>
+            <path id="wtArea" fill="url(#wtFill)"/>
+            <path id="wtLine" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle id="wtDot" r="3.5" fill="var(--accent)" stroke="var(--bg)" stroke-width="2"/>
+          </svg></div>
+          <div class="wt-meta"><span data-i18n="progress.weight.from">7月8日</span><span data-i18n="progress.weight.to">7月22日</span></div>
+          <div class="wt-note" data-i18n="progress.weight.note">近两周记录。数值只是参考，不定义你的努力。</div>
+        </div>
+      </div>
+
+      <!-- history -->
+      <div class="mod">
+        <div class="mod-head"><span class="mod-title" data-i18n="progress.history">历史记录</span><button class="mod-link" id="histAll" data-i18n="progress.history.all">全部 ›</button></div>
+        <div class="hist" id="histList">
+          <div class="hist-item" data-id="1">
+            <div class="hist-date"><div class="d">21</div><div class="m" data-i18n="progress.month.jul">7月</div></div>
+            <div class="hist-mid"><div class="plan">12:12</div><div class="dur" data-i18n="progress.dur.full">12:00 / 12:00</div></div>
+            <span class="hist-tag done" data-i18n="progress.tag.done">完成</span>
+          </div>
+          <div class="hist-item" data-id="2">
+            <div class="hist-date"><div class="d">20</div><div class="m" data-i18n="progress.month.jul">7月</div></div>
+            <div class="hist-mid"><div class="plan">12:12</div><div class="dur" data-i18n="progress.dur.partial">9:47 / 12:00</div></div>
+            <span class="hist-tag partial" data-i18n="progress.tag.partial">提前结束</span>
+          </div>
+          <div class="hist-item" data-id="3">
+            <div class="hist-date"><div class="d">19</div><div class="m" data-i18n="progress.month.jul">7月</div></div>
+            <div class="hist-mid"><div class="plan" data-i18n="progress.rest.day">休息日</div><div class="dur" data-i18n="progress.rest.desc">主动休息</div></div>
+            <span class="hist-tag rest" data-i18n="progress.tag.rest">休息</span>
+          </div>
+          <div class="hist-item" data-id="4">
+            <div class="hist-date"><div class="d">18</div><div class="m" data-i18n="progress.month.jul">7月</div></div>
+            <div class="hist-mid"><div class="plan">12:12</div><div class="dur" data-i18n="progress.dur.full">12:00 / 12:00</div></div>
+            <span class="hist-tag done" data-i18n="progress.tag.done">完成</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- plus insight -->
+      <div class="mod">
+        <div class="mod-head"><span class="mod-title" data-i18n="progress.plus">每周洞察</span></div>
+        <div class="plus-card" id="plusCard">
+          <div class="pl-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2L12 16.6 5.7 21l2.3-7.2-6-4.4h7.6z"/></svg><span>Lighter Plus</span></div>
+          <h4 data-i18n="progress.plus.title">你的节奏更稳了</h4>
+          <p data-i18n="progress.plus.desc">本周三次断食都在 12 小时附近，作息稳定。下周可以保持，不用加码。</p>
+          <span class="pl-go" data-i18n="progress.plus.go">查看 Lighter Plus ›</span>
+        </div>
+      </div>
+
+    </div>
+
+    <nav class="tabbar">
+      <a class="tab" href="today.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span data-i18n="tab.today">今日</span></a>
+      <a class="tab active" href="progress.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16v-4"/><path d="M12 16V8"/><path d="M16 16v-6"/></svg><span data-i18n="tab.progress">进度</span></a>
+      <a class="tab" href="me.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg><span data-i18n="tab.me">我的</span></a>
+    </nav>
+  </div>
+
+  <!-- detail sheet -->
+  <div class="sheet-backdrop" id="dtBackdrop"></div>
+  <div class="sheet" id="dtSheet">
+    <div class="grab"></div>
+    <h3 data-i18n="progress.detail.title">单次记录</h3>
+    <div class="dt-top">
+      <span class="dt-plan" id="dtPlan">12:12</span>
+      <span class="dt-tag done" id="dtTag" data-i18n="progress.tag.done">完成</span>
+    </div>
+    <div class="sheet-section-title" data-i18n="progress.detail.info">详情</div>
+    <div class="dt-rows">
+      <div class="dt-row"><span class="k" data-i18n="progress.detail.date">日期</span><span class="v" id="dtDate">7月21日</span></div>
+      <div class="dt-row"><span class="k" data-i18n="progress.detail.duration">断食时长</span><span class="v" id="dtDur">12:00</span></div>
+      <div class="dt-row"><span class="k" data-i18n="progress.detail.window">进食窗口</span><span class="v" id="dtWin">20:00 – 08:00</span></div>
+      <div class="dt-row"><span class="k" data-i18n="progress.detail.water">喝水</span><span class="v" id="dtWater">6 杯</span></div>
+    </div>
+    <div class="dt-note" id="dtNote" data-i18n="progress.detail.note.done">一次完整的断食。节奏稳定，继续保持。</div>
+    <div class="sheet-actions">
+      <button class="btn btn-quiet" id="dtClose" data-i18n="common.close">关闭</button>
+    </div>
+  </div>
+
+  <!-- weight add sheet -->
+  <div class="sheet-backdrop" id="wtBackdrop"></div>
+  <div class="sheet" id="wtSheet">
+    <div class="grab"></div>
+    <h3 data-i18n="progress.wt.title">记录体重</h3>
+    <p class="sheet-sub" data-i18n="progress.wt.desc">一天中任意时间都可以记，不必每天。</p>
+    <div class="sheet-section-title" data-i18n="progress.wt.unit">单位</div>
+    <div class="seg-control" id="wtUnitSeg">
+      <button aria-selected="true" data-unit="us" data-i18n="progress.wt.us">磅</button>
+      <button aria-selected="false" data-unit="metric" data-i18n="progress.wt.metric">千克</button>
+    </div>
+    <div class="sheet-section-title" data-i18n="progress.wt.value">体重</div>
+    <div class="wt-input-row">
+      <div class="wt-input-box"><input type="number" inputmode="decimal" id="wtInput" placeholder="-" value="158.2" /><span class="u" id="wtInputUnit">磅</span></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-quiet" id="wtCancel" data-i18n="common.cancel">取消</button>
+      <button class="btn btn-primary" id="wtSave" data-i18n="common.save">保存</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div class="home-indicator"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var I18N = {
+    zh:{
+      "status.time":"上午8:00","today.date":"7月22日 周三",
+      "progress.title":"进度","progress.overview":"本周概览","progress.range.week":"本周","progress.range.month":"本月",
+      "progress.done_n":"3","progress.done_unit":" / 5","progress.completed_fasts":"完成次数","progress.avg_n":"12","progress.avg_dur":"平均时长","progress.consist_n":"60%","progress.consistency":"坚持度",
+      "progress.note":"不追求每天，稳定就好。休息日也是计划的一部分。",
+      "progress.calendar":"断食日历","progress.month.jul":"7月","progress.month.jun":"6月","progress.month.aug":"8月",
+      "progress.lg.done":"完成","progress.lg.partial":"提前结束","progress.lg.rest":"休息日",
+      "progress.weight":"体重趋势","progress.weight.log":"详情 ›","progress.weight.add":"记录","progress.weight.from":"7月8日","progress.weight.to":"7月22日","progress.weight.note":"近两周记录。数值只是参考，不定义你的努力。",
+      "progress.history":"历史记录","progress.history.all":"全部 ›",
+      "progress.dur.full":"12:00 / 12:00","progress.dur.partial":"9:47 / 12:00","progress.rest.day":"休息日","progress.rest.desc":"主动休息",
+      "progress.tag.done":"完成","progress.tag.partial":"提前结束","progress.tag.rest":"休息",
+      "progress.plus":"每周洞察","progress.plus.title":"你的节奏更稳了","progress.plus.desc":"本周三次断食都在 12 小时附近，作息稳定。下周可以保持，不用加码。","progress.plus.go":"查看 Lighter Plus ›",
+      "progress.detail.title":"单次记录","progress.detail.info":"详情","progress.detail.date":"日期","progress.detail.duration":"断食时长","progress.detail.window":"进食窗口","progress.detail.water":"喝水",
+      "progress.detail.note.done":"一次完整的断食。节奏稳定，继续保持。","progress.detail.note.partial":"提前结束也是完整记录。身体需要时及时停下，是正确的选择。",
+      "progress.wt.title":"记录体重","progress.wt.desc":"一天中任意时间都可以记，不必每天。","progress.wt.unit":"单位","progress.wt.us":"磅","progress.wt.metric":"千克","progress.wt.value":"体重",
+      "common.cancel":"取消","common.save":"保存","common.close":"关闭","tab.today":"今日","tab.progress":"进度","tab.me":"我的",
+      "toast.saved":"已记录","toast.range.week":"切换到本周","toast.range.month":"切换到本月",
+      "weight.unit.us":"磅","weight.unit.metric":"千克"
+    },
+    en:{
+      "status.time":"8:00 AM","today.date":"Wed, Jul 22",
+      "progress.title":"Progress","progress.overview":"This week","progress.range.week":"Week","progress.range.month":"Month",
+      "progress.done_n":"3","progress.done_unit":" / 5","progress.completed_fasts":"Completed","progress.avg_n":"12","progress.avg_dur":"Avg duration","progress.consist_n":"60%","progress.consistency":"Consistency",
+      "progress.note":"Not every day - steady is enough. Rest days are part of the plan.",
+      "progress.calendar":"Fasting calendar","progress.month.jul":"July","progress.month.jun":"June","progress.month.aug":"August",
+      "progress.lg.done":"Done","progress.lg.partial":"Ended early","progress.lg.rest":"Rest day",
+      "progress.weight":"Weight trend","progress.weight.log":"Details ›","progress.weight.add":"Log","progress.weight.from":"Jul 8","progress.weight.to":"Jul 22","progress.weight.note":"Last two weeks. Numbers are reference, not a verdict.",
+      "progress.history":"History","progress.history.all":"All ›",
+      "progress.dur.full":"12:00 / 12:00","progress.dur.partial":"9:47 / 12:00","progress.rest.day":"Rest day","progress.rest.desc":"Intentional rest",
+      "progress.tag.done":"Done","progress.tag.partial":"Early end","progress.tag.rest":"Rest",
+      "progress.plus":"Weekly insight","progress.plus.title":"Your rhythm is steadier","progress.plus.desc":"This week's three fasts all hovered around 12 hours with a stable routine. Keep it up - no need to push harder.","progress.plus.go":"See Lighter Plus ›",
+      "progress.detail.title":"Record","progress.detail.info":"Details","progress.detail.date":"Date","progress.detail.duration":"Fast length","progress.detail.window":"Eating window","progress.detail.water":"Water",
+      "progress.detail.note.done":"A complete fast. Steady rhythm - keep going.","progress.detail.note.partial":"Ending early is still a complete record. Stopping when your body asks is the right call.",
+      "progress.wt.title":"Log weight","progress.wt.desc":"Anytime of day works - no need for daily.","progress.wt.unit":"Units","progress.wt.us":"lb","progress.wt.metric":"kg","progress.wt.value":"Weight",
+      "common.cancel":"Cancel","common.save":"Save","common.close":"Close","tab.today":"Today","tab.progress":"Progress","tab.me":"Me",
+      "toast.saved":"Saved","toast.range.week":"Switched to week","toast.range.month":"Switched to month",
+      "weight.unit.us":"lb","weight.unit.metric":"kg"
+    }
+  };
+  var STORE_LANG="lighter:lang";
+  var lang = localStorage.getItem(STORE_LANG) || "zh";
+  function t(k){ var v=I18N[lang][k]; return v===undefined?I18N.zh[k]:v; }
+  function applyLang(){
+    document.documentElement.lang = lang==="zh"?"zh-CN":"en-US";
+    document.querySelectorAll("[data-i18n]").forEach(function(n){
+      var k=n.getAttribute("data-i18n"); var v=t(k); if(v===undefined) return;
+      if(n.children.length){
+        var replaced=false;
+        for(var i=0;i<n.childNodes.length;i++){ if(n.childNodes[i].nodeType===3){ n.childNodes[i].nodeValue=v; replaced=true; break; } }
+        if(!replaced) n.textContent=v;
+      } else n.textContent=v;
+    });
+    renderWeight();
+  }
+
+  /* ---------- calendar ---------- */
+  // 7月：1日是周二。今天 22 日（周二）。
+  var dowLabels = (function(){ return lang==="zh" ? ["日","一","二","三","四","五","六"] : ["S","M","T","W","T","F","S"]; })();
+  // day status map (1-indexed): done / partial / rest / today
+  var days = {
+    1:"done",2:"done",3:"rest",4:"done",5:"partial",6:"done",7:"rest",
+    8:"done",9:"done",10:"rest",11:"done",12:"partial",13:"done",14:"rest",
+    15:"done",16:"done",17:"rest",18:"done",19:"rest",20:"partial",21:"done",22:"today"
+  };
+  function renderCal(){
+    var grid = document.getElementById("calGrid");
+    grid.innerHTML = "";
+    dowLabels = lang==="zh" ? ["日","一","二","三","四","五","六"] : ["S","M","T","W","T","F","S"];
+    dowLabels.forEach(function(d){ var c=document.createElement("div"); c.className="dow"; c.textContent=d; grid.appendChild(c); });
+    // July 2026: July 1 is a Tuesday => leading offset 2 (Sun=0)
+    var offset = 2;
+    for(var i=0;i<offset;i++){ var b=document.createElement("div"); b.className="cal-cell empty"; grid.appendChild(b); }
+    for(var d=1; d<=31; d++){
+      var cell=document.createElement("div");
+      var st = days[d];
+      cell.className = "cal-cell " + (st==="today"?"today":st||"");
+      var num=document.createElement("div"); num.className="num"; num.textContent=d; cell.appendChild(num);
+      var dot=document.createElement("div"); dot.className="dot"; cell.appendChild(dot);
+      grid.appendChild(cell);
+    }
+  }
+  var calIdx = 0; // 0=July
+  document.getElementById("calPrev").addEventListener("click", function(){
+    calIdx--; var m = document.getElementById("calMonth");
+    if(calIdx===-1) m.textContent = t("progress.month.jun"); else if(calIdx===0) m.textContent = t("progress.month.jul"); else if(calIdx===1) m.textContent = t("progress.month.aug");
+    else { calIdx=0; m.textContent=t("progress.month.jul"); }
+  });
+  document.getElementById("calNext").addEventListener("click", function(){
+    calIdx++; var m = document.getElementById("calMonth");
+    if(calIdx===1) m.textContent = t("progress.month.aug"); else if(calIdx===0) m.textContent = t("progress.month.jul"); else if(calIdx===-1) m.textContent=t("progress.month.jun");
+    else { calIdx=0; m.textContent=t("progress.month.jul"); }
+  });
+
+  /* ---------- weight chart ---------- */
+  // 示例数据点（近两周，单位磅）。诚实占位：非真实数据。
+  var wtPoints = [ {d:8,v:161.0},{d:10,v:160.4},{d:12,v:159.8},{d:14,v:159.6},{d:16,v:159.2},{d:18,v:158.9},{d:20,v:158.5},{d:22,v:158.2} ];
+  function renderWeight(){
+    var unit = (window.__wtUnit==="metric")?"kg":"lb";
+    var w = 320, h = 90, padX=8, padTop=10, padBottom=10;
+    var vals = wtPoints.map(function(p){return p.v;});
+    var vmin = Math.min.apply(null,vals), vmax = Math.max.apply(null,vals);
+    var span = (vmax-vmin)||1;
+    var xs = wtPoints.map(function(p,i){ return padX + (w-2*padX) * (i/(wtPoints.length-1)); });
+    var ys = wtPoints.map(function(p){ return padTop + (h-padTop-padBottom) * (1-(p.v-vmin)/span); });
+    var line = xs.map(function(x,i){ return (i===0?"M":"L")+x.toFixed(1)+" "+ys[i].toFixed(1); }).join(" ");
+    var area = line + " L"+xs[xs.length-1].toFixed(1)+" "+(h-padBottom)+" L"+xs[0].toFixed(1)+" "+(h-padBottom)+" Z";
+    document.getElementById("wtLine").setAttribute("d", line);
+    document.getElementById("wtArea").setAttribute("d", area);
+    var last = wtPoints[wtPoints.length-1];
+    var conv = last.v;
+    document.getElementById("wtDot").setAttribute("cx", xs[xs.length-1].toFixed(1));
+    document.getElementById("wtDot").setAttribute("cy", ys[ys.length-1].toFixed(1));
+    // unit conversion for display
+    var display = (window.__wtUnit==="metric") ? (last.v/2.2046).toFixed(1) : last.v.toFixed(1);
+    document.getElementById("wtVal").textContent = display;
+    document.getElementById("wtUnit").textContent = t("weight.unit."+(window.__wtUnit==="metric"?"metric":"us"));
+    document.getElementById("wtInputUnit").textContent = t("weight.unit."+(window.__wtUnit==="metric"?"metric":"us"));
+    var inp = document.getElementById("wtInput");
+    if(window.__wtUnit==="metric"){ inp.value=(158.2/2.2046).toFixed(1); } else { inp.value="158.2"; }
+  }
+  window.__wtUnit = "us";
+
+  /* ---------- sheets ---------- */
+  function openSheet(b,s){ document.getElementById(b).classList.add("show"); document.getElementById(s).classList.add("show"); }
+  function closeSheet(b,s){ document.getElementById(b).classList.remove("show"); document.getElementById(s).classList.remove("show"); }
+
+  // detail
+  var detailData = {
+    "1":{plan:"12:12",tag:"done",date:"7月21日",dur:"12:00",win:"20:00 – 08:00",water:"6 杯",noteKey:"progress.detail.note.done"},
+    "2":{plan:"12:12",tag:"partial",date:"7月20日",dur:"9:47",win:"20:30 – 06:17",water:"4 杯",noteKey:"progress.detail.note.partial"},
+    "3":{plan:"rest",tag:"rest",date:"7月19日",dur:"—",win:"—",water:"—",noteKey:"progress.detail.note.partial"},
+    "4":{plan:"12:12",tag:"done",date:"7月18日",dur:"12:00",win:"20:00 – 08:00",water:"7 杯",noteKey:"progress.detail.note.done"}
+  };
+  document.querySelectorAll(".hist-item").forEach(function(it){
+    it.addEventListener("click", function(){
+      var id = it.getAttribute("data-id");
+      var d = detailData[id]; if(!d) return;
+      document.getElementById("dtPlan").textContent = d.plan==="rest"?t("progress.rest.day"):d.plan;
+      var tagEl = document.getElementById("dtTag");
+      tagEl.className = "dt-tag " + (d.tag==="done"?"done":d.tag==="partial"?"partial":"rest");
+      tagEl.textContent = t("progress.tag."+(d.tag==="done"?"done":d.tag==="partial"?"partial":"rest"));
+      document.getElementById("dtDate").textContent = d.date;
+      document.getElementById("dtDur").textContent = d.dur;
+      document.getElementById("dtWin").textContent = d.win;
+      document.getElementById("dtWater").textContent = d.water;
+      var noteEl = document.getElementById("dtNote");
+      noteEl.textContent = t(d.noteKey);
+      openSheet("dtBackdrop","dtSheet");
+    });
+  });
+  document.getElementById("dtBackdrop").addEventListener("click", function(){ closeSheet("dtBackdrop","dtSheet"); });
+  document.getElementById("dtClose").addEventListener("click", function(){ closeSheet("dtBackdrop","dtSheet"); });
+
+  // weight sheet
+  document.getElementById("wtAdd").addEventListener("click", function(){ openSheet("wtBackdrop","wtSheet"); });
+  document.getElementById("wtBackdrop").addEventListener("click", function(){ closeSheet("wtBackdrop","wtSheet"); });
+  document.getElementById("wtCancel").addEventListener("click", function(){ closeSheet("wtBackdrop","wtSheet"); });
+  document.getElementById("wtSave").addEventListener("click", function(){ closeSheet("wtBackdrop","wtSheet"); toast(t("toast.saved")); });
+  document.querySelectorAll("#wtUnitSeg button").forEach(function(b){
+    b.addEventListener("click", function(){
+      window.__wtUnit = b.getAttribute("data-unit");
+      document.querySelectorAll("#wtUnitSeg button").forEach(function(x){ x.setAttribute("aria-selected", x===b?"true":"false"); });
+      renderWeight();
+    });
+  });
+  document.getElementById("wtLog").addEventListener("click", function(){ openSheet("wtBackdrop","wtSheet"); });
+  document.getElementById("histAll").addEventListener("click", function(){ toast(lang==="zh"?"仅显示近期记录":"Showing recent only"); });
+  document.getElementById("plusCard").addEventListener("click", function(){ toast(lang==="zh"?"Lighter Plus · 即将交付":"Lighter Plus · coming soon"); });
+
+  // range toggle
+  var rangeState = "week";
+  document.getElementById("rangeBtn").addEventListener("click", function(){
+    rangeState = rangeState==="week"?"month":"week";
+    this.textContent = t("progress.range."+rangeState);
+    toast(t("toast.range."+rangeState));
+  });
+
+  /* ---------- toast ---------- */
+  var toastTimer;
+  function toast(msg){ var el=document.getElementById("toast"); el.textContent=msg; el.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(function(){ el.classList.remove("show"); },1800); }
+
+  /* ---------- lang ---------- */
+  document.getElementById("langBtn").addEventListener("click", function(){ lang = lang==="zh"?"en":"zh"; try{ localStorage.setItem(STORE_LANG, lang); }catch(e){} applyLang(); renderCal(); });
+
+  applyLang();
+  renderCal();
+  renderWeight();
+})();
+</script>
+</body>
+</html>

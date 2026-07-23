@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>Lighter · 今日</title>
+<style>
+  /* ============================================================
+     Lighter design tokens - 与 onboarding.html 完全一致
+     灰绿强调 / 暖白中性 / 接近黑深灰文字
+     ============================================================ */
+  :root{
+    --bg:          oklch(98.5% 0.004 140);
+    --surface:     oklch(100% 0.002 140);
+    --surface-2:   oklch(96.8% 0.005 140);
+    --surface-3:   oklch(94.5% 0.006 140);
+    --fg:          oklch(22% 0.012 150);
+    --fg-strong:   oklch(14% 0.012 150);
+    --muted:       oklch(50% 0.012 150);
+    --faint:       oklch(68% 0.010 150);
+    --border:      oklch(92% 0.005 140);
+    --border-strong: oklch(86% 0.008 140);
+
+    --accent:      oklch(56% 0.075 165);
+    --accent-press:oklch(50% 0.078 165);
+    --accent-fg:   oklch(100% 0 0);
+    --accent-tint: oklch(96% 0.022 165);
+    --accent-track:oklch(94% 0.012 165);
+
+    --eat:         oklch(70% 0.05 60);
+
+    --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Segoe UI', system-ui, sans-serif;
+    --font-body:    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Segoe UI', system-ui, sans-serif;
+
+    --radius-card: 22px;
+    --radius-row: 16px;
+    --radius-btn: 18px;
+    --safe-x: 22px;
+    --tab-h: 82px;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{
+    background: oklch(90% 0.004 150);
+    font-family: var(--font-body);
+    color: var(--fg);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    display:flex; align-items:center; justify-content:center;
+    min-height:100dvh; padding:24px;
+  }
+
+  /* ---------------- device frame ---------------- */
+  .phone{
+    position:relative; width:390px; height:844px;
+    background:var(--bg); border-radius:54px;
+    box-shadow: 0 0 0 12px oklch(18% 0.01 150), 0 0 0 14px oklch(40% 0.01 150), 0 40px 80px -20px oklch(20% 0.04 250 / 0.45);
+    overflow:hidden; isolation:isolate;
+  }
+  .island{ position:absolute; top:11px; left:50%; transform:translateX(-50%); width:120px; height:34px; background:#000; border-radius:20px; z-index:30; }
+  .statusbar{ position:absolute; top:0; left:0; right:0; height:54px; display:flex; align-items:center; justify-content:space-between; padding:18px 32px 0; z-index:25; font-family:var(--font-display); font-weight:600; font-size:15px; color:var(--fg); letter-spacing:-0.01em; }
+  .statusbar .sb-time{ font-variant-numeric: tabular-nums; }
+  .statusbar .sb-right{ display:flex; align-items:center; gap:6px; }
+  .statusbar svg{ display:block; }
+  .home-indicator{ position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:134px; height:5px; border-radius:3px; background:var(--fg); opacity:.85; z-index:30; }
+
+  /* ---------------- screen layout ---------------- */
+  .screen{ position:absolute; inset:0; padding-top:54px; display:flex; flex-direction:column; }
+  .header{
+    flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
+    padding:8px var(--safe-x) 6px; min-height:40px;
+  }
+  .header .h-left{ display:flex; flex-direction:column; }
+  .header .date{ font:600 12px/1 var(--font-display); letter-spacing:.08em; text-transform:uppercase; color:var(--faint); }
+  .header .title{ font:600 22px/1.1 var(--font-display); letter-spacing:-0.02em; color:var(--fg-strong); margin-top:3px; }
+  .header .h-actions{ display:flex; align-items:center; gap:8px; }
+  .icon-btn{ width:34px; height:34px; border-radius:50%; border:none; background:var(--surface-2); color:var(--muted); display:grid; place-items:center; cursor:pointer; transition:background .15s, color .15s; }
+  .icon-btn:active{ background:var(--surface-3); }
+
+  .body{ flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:6px var(--safe-x) 16px; }
+  .body::-webkit-scrollbar{ width:0; }
+
+  /* ---------------- state switcher (tabs) ---------------- */
+  .state-switch{
+    display:flex; align-self:center; margin:6px auto 4px;
+    background:var(--surface-2); border-radius:12px; padding:3px; gap:3px;
+    width: fit-content;
+  }
+  .state-switch button{ border:none; background:transparent; height:32px; padding:0 14px; border-radius:9px; cursor:pointer; font:600 13px/1 var(--font-display); color:var(--muted); transition:.15s; white-space:nowrap; }
+  .state-switch button[aria-selected="true"]{ background:var(--surface); color:var(--fg); box-shadow:0 1px 2px oklch(20% 0.02 150 / .08); }
+
+  /* ---------------- timer / hero ---------------- */
+  .timer-wrap{ display:flex; flex-direction:column; align-items:center; padding:18px 0 8px; }
+  .ring{ position:relative; width:240px; height:240px; }
+  .ring svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .ring .track{ fill:none; stroke:var(--accent-track); stroke-width:10; }
+  .ring .prog{ fill:none; stroke:var(--accent); stroke-width:10; stroke-linecap:round; transition:stroke-dashoffset .8s cubic-bezier(.22,.61,.36,1); }
+  .ring-center{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+  .ring-center .big{ font:600 60px/1 var(--font-display); letter-spacing:-0.03em; color:var(--fg-strong); font-variant-numeric:tabular-nums; }
+  .ring-center .big .colon{ color:var(--accent); }
+  .ring-center .sub{ margin-top:8px; font-size:13px; color:var(--muted); letter-spacing:.01em; }
+  .ring-center .badge{ margin-top:10px; font:600 11px/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; color:var(--accent); }
+
+  /* idle hero (no ring) */
+  .idle-hero{ display:flex; flex-direction:column; align-items:center; padding:26px 0 10px; }
+  .idle-glyph{ width:96px; height:96px; border-radius:50%; background:var(--accent-tint); color:var(--accent); display:grid; place-items:center; margin-bottom:22px; position:relative; }
+  .idle-glyph::after{ content:""; position:absolute; inset:-7px; border-radius:50%; border:1px solid var(--accent); opacity:.25; }
+  .idle-hero h2{ font:600 30px/1.15 var(--font-display); letter-spacing:-0.02em; color:var(--fg-strong); text-align:center; }
+  .idle-hero p{ margin-top:10px; font-size:15.5px; line-height:1.5; color:var(--muted); text-align:center; max-width:30ch; }
+
+  /* ended hero */
+  .ended-glyph{ width:84px; height:84px; border-radius:50%; background:var(--accent); color:var(--accent-fg); display:grid; place-items:center; margin-bottom:18px; }
+
+  /* ---------------- primary CTA ---------------- */
+  .cta-block{ padding:4px 0 0; display:flex; flex-direction:column; gap:8px; }
+  .btn{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; height:56px; border:none; cursor:pointer; border-radius:var(--radius-btn); font:600 17px/1 var(--font-display); letter-spacing:-0.01em; transition:transform .12s ease, background .15s ease, opacity .15s ease; }
+  .btn:active{ transform:scale(.985); }
+  .btn-primary{ background:var(--accent); color:var(--accent-fg); }
+  .btn-primary:active{ background:var(--accent-press); }
+  .btn-primary.lg{ height:60px; font-size:18px; }
+  .btn-ghost{ background:var(--surface-2); color:var(--fg); }
+  .btn-ghost:active{ background:var(--surface-3); }
+  .btn-quiet{ background:transparent; border:1px solid var(--border); color:var(--fg); }
+  .btn-quiet:active{ background:var(--surface-2); }
+  .btn-text{ background:transparent; color:var(--muted); height:46px; font:500 15px/1 var(--font-body); }
+  .btn-text:active{ color:var(--fg); }
+  .btn-danger{ background:transparent; border:1px solid var(--border); color:var(--danger, oklch(52% 0.14 25)); }
+
+  /* ---------------- module ---------------- */
+  .mod{ margin-top:18px; }
+  .mod-head{ display:flex; align-items:baseline; justify-content:space-between; margin:0 2px 10px; }
+  .mod-title{ font:600 17px/1.2 var(--font-display); letter-spacing:-0.01em; color:var(--fg-strong); }
+  .mod-link{ font:600 13px/1 var(--font-body); color:var(--muted); cursor:pointer; background:none; border:none; }
+  .mod-link:active{ color:var(--fg); }
+
+  /* water */
+  .water-card{ background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius-card); padding:16px 18px; display:flex; align-items:center; gap:14px; }
+  .water-cups{ display:flex; gap:6px; }
+  .cup{ width:22px; height:30px; border-radius:5px; background:var(--surface-3); position:relative; transition:background .25s; }
+  .cup.filled{ background:var(--accent); }
+  .cup.filled::after{ content:""; position:absolute; left:5px; right:5px; top:5px; height:14px; border-radius:3px; background:var(--accent-tint); }
+  .water-meta{ flex:1; }
+  .water-meta .n{ font:600 20px/1 var(--font-display); color:var(--fg-strong); font-variant-numeric:tabular-nums; }
+  .water-meta .n span{ font-size:13px; color:var(--faint); font-weight:500; }
+  .water-meta .l{ font-size:12.5px; color:var(--muted); margin-top:2px; }
+  .water-add{ width:44px; height:44px; border-radius:50%; border:none; background:var(--accent); color:var(--accent-fg); display:grid; place-items:center; cursor:pointer; flex:0 0 auto; transition:transform .12s; }
+  .water-add:active{ transform:scale(.9); }
+  .water-add svg{ width:20px; height:20px; }
+
+  /* gentle tip / context card */
+  .tip-card{ background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius-card); padding:18px 18px; display:flex; gap:14px; align-items:flex-start; }
+  .tip-card .t-ico{ flex:0 0 auto; width:38px; height:38px; border-radius:11px; background:var(--accent-tint); color:var(--accent); display:grid; place-items:center; }
+  .tip-card .t-body b{ display:block; font:600 15.5px/1.3 var(--font-display); color:var(--fg-strong); }
+  .tip-card .t-body span{ display:block; margin-top:5px; font-size:14px; line-height:1.5; color:var(--muted); }
+  .tip-card .t-body .t-link{ display:inline-block; margin-top:9px; font:600 13px/1 var(--font-body); color:var(--accent); }
+
+  /* discomfort entry (anti-shame safety) */
+  .discomfort{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; padding:15px 16px; background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius-row); cursor:pointer; transition:background .15s; }
+  .discomfort:active{ background:var(--surface-2); }
+  .discomfort .d-ico{ flex:0 0 auto; width:34px; height:34px; border-radius:10px; background:var(--surface-3); color:var(--muted); display:grid; place-items:center; }
+  .discomfort .d-txt{ flex:1; }
+  .discomfort .d-txt b{ display:block; font:500 15px/1.3 var(--font-display); color:var(--fg); }
+  .discomfort .d-txt span{ font-size:12.5px; color:var(--faint); }
+
+  /* current plan timeline */
+  .plan-card{ background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius-card); padding:18px; }
+  .plan-card .pl-top{ display:flex; align-items:baseline; justify-content:space-between; }
+  .plan-card .pl-name{ font:600 26px/1 var(--font-display); letter-spacing:-0.02em; color:var(--fg-strong); }
+  .plan-card .pl-tag{ font:600 11px/1 var(--font-display); letter-spacing:.06em; text-transform:uppercase; color:var(--accent); }
+  .plan-card .pl-desc{ margin-top:6px; font-size:13.5px; color:var(--muted); }
+  .timeline{ display:flex; align-items:center; gap:0; margin-top:16px; }
+  .timeline .seg{ flex:1; height:6px; }
+  .timeline .seg.eat{ background:var(--surface-3); border-radius:3px 0 0 3px; }
+  .timeline .seg.fast{ background:var(--accent); flex:2; }
+  .timeline .seg.eat2{ background:var(--surface-3); border-radius:0 3px 3px 0; }
+  .tl-labels{ display:flex; justify-content:space-between; margin-top:8px; font-size:11px; color:var(--faint); letter-spacing:.02em; }
+  .tl-times{ display:flex; justify-content:space-between; margin-top:14px; }
+  .tl-times .t{ font:600 14px/1.2 var(--font-display); color:var(--fg); }
+  .tl-times .t span{ display:block; font:500 11.5px/1 var(--font-body); color:var(--faint); margin-top:3px; }
+
+  /* ended review */
+  .review-stats{ display:flex; gap:10px; margin-top:4px; }
+  .review-stat{ flex:1; background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius-row); padding:14px 12px; text-align:center; }
+  .review-stat .rs-n{ font:600 24px/1 var(--font-display); color:var(--fg-strong); letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
+  .review-stat .rs-l{ margin-top:4px; font-size:11.5px; color:var(--faint); letter-spacing:.02em; }
+  .review-note{ margin-top:12px; font-size:14px; line-height:1.5; color:var(--muted); text-align:center; padding:0 8px; }
+
+  /* ---------------- bottom nav ---------------- */
+  .tabbar{
+    flex:0 0 auto; height:var(--tab-h); border-top:0.5px solid var(--border);
+    display:flex; align-items:flex-start; padding:8px 0 18px;
+    background:color-mix(in oklch, var(--bg) 86%, transparent);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  .tab{ flex:1; border:none; background:transparent; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; color:var(--faint); padding-top:6px; transition:color .15s; }
+  .tab.active{ color:var(--accent); }
+  .tab svg{ width:24px; height:24px; }
+  .tab span{ font:600 11px/1 var(--font-body); letter-spacing:.01em; }
+  .tab.active span{ color:var(--fg-strong); }
+
+  /* ---------------- sheets / dialogs ---------------- */
+  .sheet-backdrop{ position:absolute; inset:0; background:oklch(20% 0.02 150 / 0.4); z-index:40; opacity:0; pointer-events:none; transition:opacity .25s; }
+  .sheet-backdrop.show{ opacity:1; pointer-events:auto; }
+  .sheet{
+    position:absolute; left:0; right:0; bottom:0; z-index:41;
+    background:var(--bg); border-radius:26px 26px 0 0;
+    padding:10px 22px calc(28px + env(safe-area-inset-bottom));
+    transform:translateY(100%); transition:transform .32s cubic-bezier(.22,.61,.36,1);
+    max-height:86%; overflow-y:auto;
+  }
+  .sheet.show{ transform:translateY(0); }
+  .sheet .grab{ width:40px; height:5px; border-radius:3px; background:var(--border-strong); margin:0 auto 18px; }
+  .sheet h3{ font:600 22px/1.2 var(--font-display); letter-spacing:-0.02em; color:var(--fg-strong); }
+  .sheet .sheet-sub{ margin-top:8px; font-size:14.5px; line-height:1.5; color:var(--muted); }
+  .sheet .sheet-section-title{ font:600 13px/1.3 var(--font-display); color:var(--muted); margin:22px 0 10px; }
+  .sheet .row-time{ display:flex; align-items:center; gap:12px; padding:14px 16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-row); margin-bottom:10px; }
+  .sheet .row-time .r-lbl{ flex:1; font-size:15px; color:var(--fg); }
+  .sheet .row-time input[type=time]{ border:none; background:transparent; font:600 17px/1 var(--font-display); color:var(--fg-strong); font-variant-numeric:tabular-nums; outline:none; }
+  .sheet .sheet-actions{ display:flex; gap:10px; margin-top:22px; }
+  .sheet .sheet-actions .btn{ flex:1; }
+
+  /* discomfort sheet options */
+  .dis-opt{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+  .dis-opt button{ padding:9px 14px; border-radius:99px; border:1px solid var(--border-strong); background:var(--surface); color:var(--muted); font:500 14px/1 var(--font-body); cursor:pointer; transition:.15s; }
+  .dis-opt button[aria-pressed="true"]{ background:var(--accent-tint); border-color:var(--accent); color:var(--accent); }
+
+  .toast{ position:absolute; left:50%; bottom:calc(var(--tab-h) + 18px); transform:translateX(-50%) translateY(20px); background:var(--fg-strong); color:var(--bg); padding:11px 18px; border-radius:99px; font:600 13px/1 var(--font-body); letter-spacing:.01em; opacity:0; pointer-events:none; transition:.28s cubic-bezier(.22,.61,.36,1); z-index:50; white-space:nowrap; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* state visibility */
+  .state{ display:none; }
+  .state.active{ display:block; animation:rise .42s cubic-bezier(.22,.61,.36,1); }
+  @keyframes rise{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+
+  @media (max-width: 440px){
+    body{ padding:0; background:var(--bg); }
+    .phone{ width:100vw; height:100dvh; border-radius:0; box-shadow:none; }
+  }
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+  <div class="island"></div>
+  <div class="statusbar">
+    <span class="sb-time" data-i18n="status.time">上午8:00</span>
+    <span class="sb-right">
+      <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="6" width="3" height="6" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1" fill-opacity=".35"/></svg>
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><path d="M8.5 11.5l2-2a2.8 2.8 0 00-4 0l2 2zM4 7a6.4 6.4 0 019 0l-1.4 1.4a4.4 4.4 0 00-6.2 0L4 7zM0 3.1a12.7 12.7 0 0117 0l-1.4 1.4a10.7 10.7 0 00-14.2 0L0 3.1z"/></svg>
+      <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0.5" y="0.5" width="22" height="11" rx="3" stroke="currentColor" stroke-opacity=".4"/><rect x="2" y="2" width="17" height="8" rx="1.6" fill="currentColor"/><rect x="24" y="4" width="1.6" height="4" rx="0.8" fill="currentColor" fill-opacity=".4"/></svg>
+    </span>
+  </div>
+
+  <div class="screen">
+    <header class="header">
+      <div class="h-left">
+        <span class="date" data-i18n="today.date">7月22日 周三</span>
+        <span class="title" data-i18n="today.title">今日</span>
+      </div>
+      <div class="h-actions">
+        <button class="icon-btn" id="adjustBtn" aria-label="调整时间"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5l3 2"/><path d="M3.5 9a9 9 0 11-1 4"/><path d="M3 6v3h3"/></svg></button>
+        <button class="icon-btn" id="langBtn" aria-label="语言"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg></button>
+      </div>
+    </header>
+
+    <div class="state-switch" id="stateSwitch">
+      <button data-state="idle" aria-selected="true" data-i18n="today.state.idle">开始断食</button>
+      <button data-state="fasting" aria-selected="false" data-i18n="today.state.fasting">断食中</button>
+      <button data-state="ended" aria-selected="false" data-i18n="today.state.ended">已结束</button>
+    </div>
+
+    <div class="body" id="body">
+
+      <!-- ============ STATE: IDLE ============ -->
+      <section class="state active" id="state-idle" data-state="idle">
+        <div class="idle-hero">
+          <div class="idle-glyph"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+          <h2 data-i18n="today.idle.title">准备好了就开始</h2>
+          <p data-i18n="today.idle.desc">从今晚的最后一餐开始，12 小时后自然开启新的一天。随时可以开始，也可以稍后再来。</p>
+        </div>
+        <div class="cta-block">
+          <button class="btn btn-primary lg" id="startFastBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3z"/></svg><span data-i18n="today.start_fast">开始断食</span></button>
+          <button class="btn btn-text" id="toFastingPreview" data-i18n="today.idle.preview_fast">查看断食中状态</button>
+        </div>
+
+        <!-- current plan -->
+        <div class="mod">
+          <div class="mod-head"><span class="mod-title" data-i18n="today.plan">当前计划</span><button class="mod-link" data-i18n="today.plan.edit">调整 ›</button></div>
+          <div class="plan-card">
+            <div class="pl-top"><span class="pl-name">12:12</span><span class="pl-tag" data-i18n="today.plan.gentle">温和入门</span></div>
+            <div class="pl-desc" data-i18n="today.plan.desc">断食 12 小时，在另外 12 小时内进食。</div>
+            <div class="timeline"><div class="seg eat"></div><div class="seg fast"></div><div class="seg eat2"></div></div>
+            <div class="tl-labels"><span data-i18n="today.tl.last">最后一餐</span><span data-i18n="today.tl.fast">断食</span><span data-i18n="today.tl.first">第一餐</span></div>
+            <div class="tl-times"><div class="t"><span data-i18n="plan.example.start">晚上 8:00</span><span data-i18n="today.tl.faststart">断食开始</span></div><div class="t"><span data-i18n="plan.example.open">早上 8:00</span><span data-i18n="today.tl.windowopen">进食窗口开启</span></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ STATE: FASTING ============ -->
+      <section class="state" id="state-fasting" data-state="fasting">
+        <div class="timer-wrap">
+          <div class="ring">
+            <svg viewBox="0 0 120 120">
+              <circle class="track" cx="60" cy="60" r="52"/>
+              <circle class="prog" id="ringProg" cx="60" cy="60" r="52"/>
+            </svg>
+            <div class="ring-center">
+              <div class="big"><span id="hh">07</span><span class="colon">:</span><span id="mm">23</span></div>
+              <div class="sub"><span data-i18n="today.fasting.remaining">距进食窗口开启</span></div>
+              <div class="badge" data-i18n="today.fasting.badge">断食进行中</div>
+            </div>
+          </div>
+        </div>
+        <div class="cta-block">
+          <button class="btn btn-quiet" id="endFastBtn" data-i18n="today.end_fast">结束断食</button>
+          <button class="btn btn-text" id="extendBtn" data-i18n="today.fasting.adjust">临时调整时间</button>
+        </div>
+
+        <!-- water -->
+        <div class="mod">
+          <div class="mod-head"><span class="mod-title" data-i18n="today.water">喝水记录</span><button class="mod-link" data-i18n="today.water.log">详情 ›</button></div>
+          <div class="water-card">
+            <div class="water-cups" id="cups">
+              <div class="cup filled"></div><div class="cup filled"></div><div class="cup filled"></div>
+              <div class="cup"></div><div class="cup"></div><div class="cup"></div><div class="cup"></div><div class="cup"></div>
+            </div>
+            <div class="water-meta"><div class="n"><span id="cupN">3</span> / 8 <span data-i18n="today.water.cups">杯</span></div><div class="l" data-i18n="today.water.hint">温和提醒，少量多次</div></div>
+            <button class="water-add" id="waterAdd" aria-label="加水"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+          </div>
+        </div>
+
+        <!-- discomfort -->
+        <div class="mod">
+          <button class="discomfort" id="discomfortBtn">
+            <span class="d-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg></span>
+            <span class="d-txt"><b data-i18n="today.discomfort">身体不适？</b><span data-i18n="today.discomfort.desc">不舒服可以随时结束，这很正常</span></span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+
+        <!-- gentle tip -->
+        <div class="mod">
+          <div class="mod-head"><span class="mod-title" data-i18n="today.tips">温和建议</span></div>
+          <div class="tip-card">
+            <span class="t-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 16.5 7.1 18.7 8 13.2 4 9.3 9.5 8.5 12 3z"/></svg></span>
+            <div class="t-body">
+              <b data-i18n="today.tip1.title">感到饥饿是正常的</b>
+              <span data-i18n="today.tip1.body">身体正在适应节奏。喝口水、换个姿势，几分钟通常会过去。</span>
+              <button class="t-link" data-i18n="today.tip.more">了解更多 ›</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ STATE: ENDED ============ -->
+      <section class="state" id="state-ended" data-state="ended">
+        <div class="idle-hero">
+          <div class="ended-glyph"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></div>
+          <h2 data-i18n="today.ended.title">辛苦了，已记录</h2>
+          <p data-i18n="today.ended.desc">这次断食已结束。提前结束也是一次完整的记录，不算失败。</p>
+        </div>
+
+        <div class="mod" style="margin-top:6px;">
+          <div class="review-stats">
+            <div class="review-stat"><div class="rs-n" id="endedDur">9:47</div><div class="rs-l" data-i18n="today.ended.duration">本次时长</div></div>
+            <div class="review-stat"><div class="rs-n" data-i18n="today.ended.plan_pct">82%</div><div class="rs-l" data-i18n="today.ended.of_plan">计划达成</div></div>
+            <div class="review-stat"><div class="rs-n" data-i18n="today.ended.streak">1</div><div class="rs-l" data-i18n="today.ended.times">本周次数</div></div>
+          </div>
+          <p class="review-note" data-i18n="today.ended.note">明天可以从同一时间继续。节奏由你定，不是由数字定。</p>
+        </div>
+
+        <div class="cta-block" style="margin-top:14px;">
+          <button class="btn btn-primary lg" id="restartBtn" data-i18n="today.ended.again">开始下一次断食</button>
+          <button class="btn btn-text" id="reviewMore" data-i18n="today.ended.review">查看复盘 ›</button>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- bottom tab bar -->
+    <nav class="tabbar">
+      <button class="tab active" data-tab="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span data-i18n="tab.today">今日</span></button>
+      <button class="tab" data-tab="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16v-4"/><path d="M12 16V8"/><path d="M16 16v-6"/></svg><span data-i18n="tab.progress">进度</span></button>
+      <button class="tab" data-tab="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg><span data-i18n="tab.me">我的</span></button>
+    </nav>
+  </div>
+
+  <!-- adjust sheet -->
+  <div class="sheet-backdrop" id="adjustBackdrop"></div>
+  <div class="sheet" id="adjustSheet">
+    <div class="grab"></div>
+    <h3 data-i18n="today.adjust.title">临时调整时间</h3>
+    <p class="sheet-sub" data-i18n="today.adjust.desc">这次调整只影响本轮，不会改变你的计划。生活变化时随时可用。</p>
+    <div class="sheet-section-title" data-i18n="today.adjust.start">断食开始时间</div>
+    <div class="row-time"><span class="r-lbl" data-i18n="today.adjust.started_at">已开始于</span><input type="time" value="20:00" /></div>
+    <div class="sheet-section-title" data-i18n="today.adjust.duration">断食时长</div>
+    <div class="seg-control" id="durSeg" style="display:flex;background:var(--surface-2);border-radius:12px;padding:3px;gap:3px;">
+      <button style="flex:1;height:38px;border:none;background:transparent;border-radius:9px;cursor:pointer;font:600 13px/1 var(--font-display);color:var(--muted);" aria-selected="true">12:12</button>
+      <button style="flex:1;height:38px;border:none;background:transparent;border-radius:9px;cursor:pointer;font:600 13px/1 var(--font-display);color:var(--muted);" aria-selected="false">14:10</button>
+      <button style="flex:1;height:38px;border:none;background:transparent;border-radius:9px;cursor:pointer;font:600 13px/1 var(--font-display);color:var(--muted);" aria-selected="false">16:8</button>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-quiet" id="adjustCancel" data-i18n="common.cancel">取消</button>
+      <button class="btn btn-primary" id="adjustSave" data-i18n="common.save">保存</button>
+    </div>
+  </div>
+
+  <!-- discomfort sheet -->
+  <div class="sheet-backdrop" id="disBackdrop"></div>
+  <div class="sheet" id="disSheet">
+    <div class="grab"></div>
+    <h3 data-i18n="today.dis.title">先照顾自己</h3>
+    <p class="sheet-sub" data-i18n="today.dis.desc">如果不适，结束断食是合理的选择，不算失败。严重不适请咨询医生。</p>
+    <div class="sheet-section-title" data-i18n="today.dis.how">现在感觉如何？</div>
+    <div class="dis-opt" id="disOpts">
+      <button aria-pressed="false" data-i18n="today.dis.o1">头晕</button>
+      <button aria-pressed="false" data-i18n="today.dis.o2">心慌</button>
+      <button aria-pressed="false" data-i18n="today.dis.o3">极度饥饿</button>
+      <button aria-pressed="false" data-i18n="today.dis.o4">发冷</button>
+      <button aria-pressed="false" data-i18n="today.dis.o5">其他</button>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn btn-quiet" id="disCancel" data-i18n="common.keep_going">继续坚持</button>
+      <button class="btn btn-primary" id="disEnd" data-i18n="today.end_fast">结束断食</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div class="home-indicator"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- i18n ---------- */
+  var I18N = {
+    zh:{
+      "status.time":"上午8:00",
+      "today.date":"7月22日 周三",
+      "today.title":"今日",
+      "today.state.idle":"开始断食","today.state.fasting":"断食中","today.state.ended":"已结束",
+      "today.idle.title":"准备好了就开始",
+      "today.idle.desc":"从今晚的最后一餐开始，12 小时后自然开启新的一天。随时可以开始，也可以稍后再来。",
+      "today.start_fast":"开始断食",
+      "today.idle.preview_fast":"查看断食中状态",
+      "today.plan":"当前计划","today.plan.edit":"调整 ›","today.plan.gentle":"温和入门","today.plan.desc":"断食 12 小时，在另外 12 小时内进食。",
+      "today.tl.last":"最后一餐","today.tl.fast":"断食","today.tl.first":"第一餐","today.tl.faststart":"断食开始","today.tl.windowopen":"进食窗口开启",
+      "today.fasting.remaining":"距进食窗口开启","today.fasting.badge":"断食进行中","today.fasting.adjust":"临时调整时间",
+      "today.end_fast":"结束断食",
+      "today.water":"喝水记录","today.water.log":"详情 ›","today.water.cups":"杯","today.water.hint":"温和提醒，少量多次",
+      "today.discomfort":"身体不适？","today.discomfort.desc":"不舒服可以随时结束，这很正常",
+      "today.tips":"温和建议","today.tip1.title":"感到饥饿是正常的","today.tip1.body":"身体正在适应节奏。喝口水、换个姿势，几分钟通常会过去。","today.tip.more":"了解更多 ›",
+      "today.ended.title":"辛苦了，已记录","today.ended.desc":"这次断食已结束。提前结束也是一次完整的记录，不算失败。",
+      "today.ended.duration":"本次时长","today.ended.of_plan":"计划达成","today.ended.times":"本周次数","today.ended.streak":"1","today.ended.plan_pct":"82%",
+      "today.ended.note":"明天可以从同一时间继续。节奏由你定，不是由数字定。",
+      "today.ended.again":"开始下一次断食","today.ended.review":"查看复盘 ›",
+      "today.adjust.title":"临时调整时间","today.adjust.desc":"这次调整只影响本轮，不会改变你的计划。生活变化时随时可用。",
+      "today.adjust.start":"断食开始时间","today.adjust.started_at":"已开始于","today.adjust.duration":"断食时长",
+      "today.dis.title":"先照顾自己","today.dis.desc":"如果不适，结束断食是合理的选择，不算失败。严重不适请咨询医生。","today.dis.how":"现在感觉如何？",
+      "today.dis.o1":"头晕","today.dis.o2":"心慌","today.dis.o3":"极度饥饿","today.dis.o4":"发冷","today.dis.o5":"其他",
+      "common.cancel":"取消","common.save":"保存","common.keep_going":"继续坚持",
+      "tab.today":"今日","tab.progress":"进度","tab.me":"我的",
+      "plan.example.start":"晚上 8:00","plan.example.open":"早上 8:00",
+      "toast.water":"已记录 +1 杯","toast.started":"断食已开始","toast.ended":"已结束断食","toast.adjusted":"时间已调整"
+    },
+    en:{
+      "status.time":"8:00 AM",
+      "today.date":"Wed, Jul 22",
+      "today.title":"Today",
+      "today.state.idle":"Start","today.state.fasting":"Fasting","today.state.ended":"Ended",
+      "today.idle.title":"Start when you're ready",
+      "today.idle.desc":"Begin after your last meal tonight - 12 hours later, a new day opens gently. Start anytime, or come back later.",
+      "today.start_fast":"Start fasting",
+      "today.idle.preview_fast":"Preview fasting state",
+      "today.plan":"Current plan","today.plan.edit":"Adjust ›","today.plan.gentle":"Gentle starter","today.plan.desc":"Fast for 12 hours, eat in the other 12.",
+      "today.tl.last":"Last meal","today.tl.fast":"Fast","today.tl.first":"First meal","today.tl.faststart":"Fast starts","today.tl.windowopen":"Eating window opens",
+      "today.fasting.remaining":"until eating window","today.fasting.badge":"Fasting","today.fasting.adjust":"Adjust times",
+      "today.end_fast":"End fast",
+      "today.water":"Water","today.water.log":"Details ›","today.water.cups":"cups","today.water.hint":"Gentle nudge, small sips",
+      "today.discomfort":"Feeling unwell?","today.discomfort.desc":"You can end anytime - that's okay",
+      "today.tips":"Gentle tips","today.tip1.title":"Hunger is normal","today.tip1.body":"Your body is finding its rhythm. Sip water, shift your posture - it often passes in a few minutes.","today.tip.more":"Learn more ›",
+      "today.ended.title":"Nicely done, recorded","today.ended.desc":"This fast is logged. Ending early still counts as a complete record, not a failure.",
+      "today.ended.duration":"Duration","today.ended.of_plan":"Of plan","today.ended.times":"This week","today.ended.streak":"1","today.ended.plan_pct":"82%",
+      "today.ended.note":"Pick up from the same time tomorrow. You set the pace, not the numbers.",
+      "today.ended.again":"Start next fast","today.ended.review":"Review ›",
+      "today.adjust.title":"Adjust times for this round","today.adjust.desc":"This only affects this round, not your plan. Use it whenever life shifts.",
+      "today.adjust.start":"Fast start time","today.adjust.started_at":"Started at","today.adjust.duration":"Fast length",
+      "today.dis.title":"Take care of yourself first","today.dis.desc":"If you're unwell, ending is the right call - not a failure. For severe symptoms, consult a doctor.","today.dis.how":"How do you feel?",
+      "today.dis.o1":"Dizzy","today.dis.o2":"Shaky","today.dis.o3":"Very hungry","today.dis.o4":"Cold","today.dis.o5":"Other",
+      "common.cancel":"Cancel","common.save":"Save","common.keep_going":"Keep going",
+      "tab.today":"Today","tab.progress":"Progress","tab.me":"Me",
+      "plan.example.start":"8:00 PM","plan.example.open":"8:00 AM",
+      "toast.water":"+1 cup logged","toast.started":"Fast started","toast.ended":"Fast ended","toast.adjusted":"Time adjusted"
+    }
+  };
+  var STORE_LANG="lighter:lang";
+  var lang = localStorage.getItem(STORE_LANG) || "zh";
+  function t(k){ var v=I18N[lang][k]; return v===undefined?I18N.zh[k]:v; }
+  function applyLang(){
+    document.documentElement.lang = lang==="zh"?"zh-CN":"en-US";
+    document.querySelectorAll("[data-i18n]").forEach(function(n){
+      var k=n.getAttribute("data-i18n"); var v=t(k); if(v===undefined) return;
+      if(n.children.length){
+        var replaced=false;
+        for(var i=0;i<n.childNodes.length;i++){ if(n.childNodes[i].nodeType===3){ n.childNodes[i].nodeValue=v; replaced=true; break; } }
+        if(!replaced) n.textContent=v;
+      } else n.textContent=v;
+    });
+  }
+
+  /* ---------- state machine ---------- */
+  var state = "idle"; // idle | fasting | ended
+  var cups = 3;
+  var ringR = 52, ringCirc = 2*Math.PI*ringR;
+  var ringEl = document.getElementById("ringProg");
+  ringEl.style.strokeDasharray = ringCirc;
+  ringEl.style.strokeDashoffset = ringCirc; // empty
+
+  function setState(s, opts){
+    state = s;
+    document.querySelectorAll(".state").forEach(function(el){ el.classList.toggle("active", el.getAttribute("data-state")===s); });
+    document.querySelectorAll("#stateSwitch button").forEach(function(b){ b.setAttribute("aria-selected", b.getAttribute("data-state")===s); });
+    document.getElementById("body").scrollTop = 0;
+    if(s==="fasting"){ setRing(0.62); setClock("07","23"); }
+    if(s==="ended"){ /* keep stat values */ }
+    // scroll switcher into view if needed
+  }
+  function setRing(frac){
+    ringEl.style.strokeDashoffset = ringCirc * (1 - Math.max(0,Math.min(1,frac)));
+  }
+  function setClock(hh, mm){ document.getElementById("hh").textContent=hh; document.getElementById("mm").textContent=mm; }
+
+  // state switch tabs
+  document.querySelectorAll("#stateSwitch button").forEach(function(b){
+    b.addEventListener("click", function(){ setState(b.getAttribute("data-state")); });
+  });
+
+  // start fast
+  document.getElementById("startFastBtn").addEventListener("click", function(){
+    setState("fasting"); setRing(0.04); setClock("00","12"); toast(t("toast.started"));
+  });
+  document.getElementById("toFastingPreview").addEventListener("click", function(){ setState("fasting"); });
+  document.getElementById("endFastBtn").addEventListener("click", function(){ setState("ended"); toast(t("toast.ended")); });
+  document.getElementById("restartBtn").addEventListener("click", function(){ cups=3; renderCups(); setState("idle"); });
+  document.getElementById("reviewMore").addEventListener("click", function(){ /* placeholder */ });
+
+  /* ---------- water ---------- */
+  function renderCups(){
+    var els = document.querySelectorAll("#cups .cup");
+    els.forEach(function(c,i){ c.classList.toggle("filled", i<cups); });
+    document.getElementById("cupN").textContent = cups;
+  }
+  document.getElementById("waterAdd").addEventListener("click", function(){
+    if(cups<8){ cups++; renderCups(); toast(t("toast.water")); }
+  });
+  renderCups();
+
+  /* ---------- sheets ---------- */
+  function openSheet(backdropId, sheetId){
+    document.getElementById(backdropId).classList.add("show");
+    document.getElementById(sheetId).classList.add("show");
+  }
+  function closeSheet(backdropId, sheetId){
+    document.getElementById(backdropId).classList.remove("show");
+    document.getElementById(sheetId).classList.remove("show");
+  }
+  function bindSheet(openBtn, backdropId, sheetId, cancelBtn, saveBtn, onSave){
+    var ob = document.getElementById(openBtn);
+    if(ob) ob.addEventListener("click", function(){ openSheet(backdropId, sheetId); });
+    document.getElementById(backdropId).addEventListener("click", function(){ closeSheet(backdropId, sheetId); });
+    document.getElementById(cancelBtn).addEventListener("click", function(){ closeSheet(backdropId, sheetId); });
+    if(saveBtn){
+      document.getElementById(saveBtn).addEventListener("click", function(){ closeSheet(backdropId, sheetId); if(onSave) onSave(); });
+    }
+  }
+  bindSheet("adjustBtn","adjustBackdrop","adjustSheet","adjustCancel","adjustSave", function(){ toast(t("toast.adjusted")); });
+  bindSheet("discomfortBtn","disBackdrop","disSheet","disCancel","disEnd", function(){ setState("ended"); toast(t("toast.ended")); });
+  document.getElementById("extendBtn").addEventListener("click", function(){ openSheet("adjustBackdrop","adjustSheet"); });
+
+  // dur segmented
+  document.querySelectorAll("#durSeg button").forEach(function(b){
+    b.addEventListener("click", function(){
+      document.querySelectorAll("#durSeg button").forEach(function(x){
+        x.setAttribute("aria-selected","false");
+        x.style.background="transparent"; x.style.color="var(--muted)";
+      });
+      b.setAttribute("aria-selected","true");
+      b.style.background="var(--surface)"; b.style.color="var(--fg)";
+      b.style.boxShadow="0 1px 2px oklch(20% 0.02 150 / .08)";
+    });
+  });
+  // init dur first button selected style
+  (function(){ var f=document.querySelector('#durSeg button[aria-selected="true"]'); if(f){ f.style.background="var(--surface)"; f.style.color="var(--fg)"; f.style.boxShadow="0 1px 2px oklch(20% 0.02 150 / .08)"; } })();
+
+  // discomfort options
+  document.querySelectorAll("#disOpts button").forEach(function(b){
+    b.addEventListener("click", function(){
+      var cur = b.getAttribute("aria-pressed")==="true";
+      b.setAttribute("aria-pressed", !cur);
+    });
+  });
+
+  // plan edit link -> open adjust
+  var planEdit = document.querySelector('[data-i18n="today.plan.edit"]');
+  if(planEdit) planEdit.addEventListener("click", function(){ openSheet("adjustBackdrop","adjustSheet"); });
+
+  /* ---------- toast ---------- */
+  var toastTimer;
+  function toast(msg){
+    var el = document.getElementById("toast");
+    el.textContent = msg; el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.classList.remove("show"); }, 1900);
+  }
+
+  /* ---------- tab nav (in-app, real product nav) ---------- */
+  document.querySelectorAll(".tabbar .tab").forEach(function(b){
+    b.addEventListener("click", function(){
+      var tab = b.getAttribute("data-tab");
+      document.querySelectorAll(".tabbar .tab").forEach(function(x){ x.classList.toggle("active", x===b); });
+      if(tab!=="today") toast(tab==="progress" ? "进度 · 即将交付" : "我的 · 即将交付");
+    });
+  });
+
+  /* ---------- lang ---------- */
+  document.getElementById("langBtn").addEventListener("click", function(){
+    lang = lang==="zh"?"en":"zh";
+    try{ localStorage.setItem(STORE_LANG, lang); }catch(e){}
+    applyLang();
+  });
+
+  applyLang();
+  setState("idle");
+})();
+</script>
+</body>
+</html>

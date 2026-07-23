@@ -1,0 +1,1021 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>Lighter · 新手引导</title>
+<style>
+  /* ============================================================
+     Lighter design tokens — 浅色主题为主,预留深色变量
+     灰绿强调 / 暖白中性 / 接近黑深灰文字
+     ============================================================ */
+  :root{
+    --bg:          oklch(98.5% 0.004 140);
+    --surface:     oklch(100% 0.002 140);
+    --surface-2:   oklch(96.8% 0.005 140);
+    --surface-3:   oklch(94.5% 0.006 140);
+    --fg:          oklch(22% 0.012 150);
+    --fg-strong:   oklch(14% 0.012 150);
+    --muted:       oklch(50% 0.012 150);
+    --faint:       oklch(68% 0.010 150);
+    --border:      oklch(92% 0.005 140);
+    --border-strong: oklch(86% 0.008 140);
+
+    --accent:      oklch(56% 0.075 165);
+    --accent-press:oklch(50% 0.078 165);
+    --accent-fg:   oklch(100% 0 0);
+    --accent-tint: oklch(96% 0.022 165);
+
+    --success: oklch(58% 0.10 150);
+    --warn:    oklch(70% 0.12 70);
+    --danger:  oklch(56% 0.14 25);
+
+    /* 深色主题预留 */
+    --bg-dark:      oklch(16% 0.006 150);
+    --surface-dark: oklch(21% 0.006 150);
+    --fg-dark:      oklch(96% 0.004 140);
+    --border-dark:  oklch(28% 0.008 150);
+
+    --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Segoe UI', system-ui, sans-serif;
+    --font-body:    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Segoe UI', system-ui, sans-serif;
+
+    --radius-card: 20px;
+    --radius-row: 16px;
+    --radius-btn: 18px;
+    --safe-x: 22px;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{
+    background: oklch(90% 0.004 150);
+    font-family: var(--font-body);
+    color: var(--fg);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    display:flex; align-items:center; justify-content:center;
+    min-height:100dvh; padding:24px;
+  }
+
+  /* ---------------- device frame ---------------- */
+  .stage{ display:flex; align-items:center; justify-content:center; }
+  .phone{
+    position:relative;
+    width:390px; height:844px;
+    background:var(--bg);
+    border-radius:54px;
+    box-shadow:
+      0 0 0 12px oklch(18% 0.01 150),
+      0 0 0 14px oklch(40% 0.01 150),
+      0 40px 80px -20px oklch(20% 0.04 250 / 0.45);
+    overflow:hidden;
+    isolation:isolate;
+  }
+  .island{
+    position:absolute; top:11px; left:50%; transform:translateX(-50%);
+    width:120px; height:34px; background:#000; border-radius:20px; z-index:30;
+  }
+  .statusbar{
+    position:absolute; top:0; left:0; right:0; height:54px;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 32px 0; z-index:25;
+    font-family:var(--font-display); font-weight:600; font-size:15px;
+    color:var(--fg); letter-spacing:-0.01em;
+  }
+  .statusbar .sb-time{ font-variant-numeric: tabular-nums; }
+  .statusbar .sb-right{ display:flex; align-items:center; gap:6px; }
+  .statusbar svg{ display:block; }
+  .home-indicator{
+    position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
+    width:134px; height:5px; border-radius:3px; background:var(--fg); opacity:.85; z-index:30;
+  }
+
+  /* ---------------- screen layout ---------------- */
+  .screen{
+    position:absolute; inset:0;
+    padding-top:54px;
+    display:flex; flex-direction:column;
+  }
+  .topbar{
+    flex:0 0 auto;
+    display:flex; align-items:center; gap:12px;
+    padding:10px var(--safe-x) 6px;
+    min-height:40px;
+  }
+  .progress{ flex:1; height:4px; border-radius:99px; background:var(--surface-3); overflow:hidden; }
+  .progress > i{ display:block; height:100%; width:0; background:var(--accent); border-radius:99px; transition:width .5s cubic-bezier(.22,.61,.36,1); }
+  .lang-pill{
+    flex:0 0 auto; height:30px; padding:0 12px; border:none; cursor:pointer;
+    background:var(--surface-2); color:var(--muted);
+    border-radius:99px; font:600 12px/1 var(--font-display); letter-spacing:.02em;
+    display:inline-flex; align-items:center; gap:5px;
+  }
+  .lang-pill .dot{ width:6px; height:6px; border-radius:50%; background:var(--accent); }
+
+  .body{
+    flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding:8px var(--safe-x) 24px;
+  }
+  .body::-webkit-scrollbar{ width:0; }
+
+  .bottom{
+    flex:0 0 auto;
+    padding:8px var(--safe-x) 30px;
+    background:linear-gradient(to top, var(--bg) 70%, transparent);
+    border-top:0.5px solid transparent;
+  }
+  .bottom.has-border{ border-top:0.5px solid var(--border); background:var(--bg); }
+
+  /* ---------------- buttons ---------------- */
+  .btn{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    width:100%; height:56px; border:none; cursor:pointer;
+    border-radius:var(--radius-btn);
+    font:600 17px/1 var(--font-display); letter-spacing:-0.01em;
+    transition:transform .12s ease, background .15s ease, opacity .15s ease;
+  }
+  .btn:active{ transform:scale(.985); }
+  .btn-primary{ background:var(--accent); color:var(--accent-fg); }
+  .btn-primary:active{ background:var(--accent-press); }
+  .btn-primary[disabled]{ background:var(--surface-3); color:var(--faint); cursor:not-allowed; }
+  .btn-ghost{ background:transparent; color:var(--fg); height:48px; font-weight:500; }
+  .btn-text{ background:transparent; color:var(--muted); height:44px; font:500 15px/1 var(--font-body); }
+  .btn-text:active{ color:var(--fg); }
+
+  .footnote{ text-align:center; color:var(--faint); font-size:12.5px; line-height:1.5; margin-top:10px; padding:0 12px; }
+
+  /* ---------------- step content ---------------- */
+  .step{ display:none; }
+  .step.active{ display:block; animation:rise .42s cubic-bezier(.22,.61,.36,1); }
+  @keyframes rise{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+
+  .eyebrow{ font:600 12px/1 var(--font-display); letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:14px; }
+  .h-title{ font:600 28px/1.18 var(--font-display); letter-spacing:-0.02em; color:var(--fg-strong); }
+  .h-title.lg{ font-size:30px; }
+  .lede{ margin-top:12px; font-size:16px; line-height:1.5; color:var(--muted); max-width:32ch; }
+
+  /* selectable option rows */
+  .opt-list{ display:flex; flex-direction:column; gap:10px; margin-top:24px; }
+  .opt{
+    display:flex; align-items:center; gap:14px;
+    width:100%; text-align:left; cursor:pointer;
+    padding:17px 16px; border-radius:var(--radius-row);
+    background:var(--surface); border:1.5px solid var(--border);
+    transition:border-color .15s, background .15s, transform .1s;
+  }
+  .opt:active{ transform:scale(.99); }
+  .opt .ico{ flex:0 0 auto; color:var(--muted); display:grid; place-items:center; }
+  .opt .lbl{ flex:1 1 auto; font-size:16px; line-height:1.35; color:var(--fg); }
+  .opt .lbl small{ display:block; font-size:12.5px; color:var(--faint); margin-top:2px; font-weight:400; }
+  .opt .radio{ flex:0 0 auto; width:22px; height:22px; border-radius:50%; border:2px solid var(--border-strong); display:grid; place-items:center; transition:.15s; }
+  .opt .radio svg{ opacity:0; transform:scale(.4); transition:.18s; }
+  .opt[aria-checked="true"]{ border-color:var(--accent); background:var(--surface); }
+  .opt[aria-checked="true"] .radio{ background:var(--accent); border-color:var(--accent); }
+  .opt[aria-checked="true"] .radio svg{ opacity:1; transform:scale(1); }
+  .opt[aria-checked="true"] .ico{ color:var(--accent); }
+
+  /* checkbox check variant */
+  .opt.check .radio{ border-radius:7px; }
+  .opt.check[aria-checked="true"] .radio svg{ opacity:1; transform:scale(1); }
+
+  .opt-title{ font:600 15px/1.3 var(--font-display); color:var(--muted); margin:28px 0 4px; letter-spacing:-0.005em; }
+
+  /* value points (welcome) */
+  .value-list{ margin-top:24px; display:flex; flex-direction:column; gap:2px; }
+  .value-item{ display:flex; align-items:center; gap:14px; padding:14px 2px; border-top:0.5px solid var(--border); }
+  .value-item:first-child{ border-top:none; }
+  .value-item .v-ico{ flex:0 0 auto; width:30px; height:30px; border-radius:9px; background:var(--accent-tint); color:var(--accent); display:grid; place-items:center; }
+  .value-item .v-txt{ font-size:15.5px; color:var(--fg); line-height:1.35; }
+
+  /* consent checkbox row */
+  .consent{
+    display:flex; align-items:flex-start; gap:12px; margin-top:22px; cursor:pointer;
+    padding:14px 4px 0; border-top:0.5px solid var(--border);
+  }
+  .consent .c-box{ flex:0 0 auto; width:24px; height:24px; border-radius:7px; border:2px solid var(--border-strong); margin-top:1px; display:grid; place-items:center; transition:.15s; }
+  .consent .c-box svg{ opacity:0; transform:scale(.4); transition:.18s; }
+  .consent[aria-checked="true"] .c-box{ background:var(--accent); border-color:var(--accent); }
+  .consent[aria-checked="true"] .c-box svg{ opacity:1; transform:scale(1); }
+  .consent .c-txt{ font-size:14.5px; line-height:1.45; color:var(--fg); }
+
+  /* safety list */
+  .safe-list{ margin-top:24px; display:flex; flex-direction:column; }
+  .safe-item{ display:flex; gap:14px; padding:16px 2px; border-top:0.5px solid var(--border); }
+  .safe-item:first-child{ border-top:none; }
+  .safe-item .s-no{ flex:0 0 auto; width:26px; height:26px; border-radius:50%; background:var(--surface-2); color:var(--muted); display:grid; place-items:center; font:600 13px/1 var(--font-display); }
+  .safe-item .s-txt b{ display:block; font-weight:600; font-size:15.5px; color:var(--fg); }
+  .safe-item .s-txt span{ font-size:13.5px; color:var(--muted); }
+
+  .hero-ico{ width:56px; height:56px; border-radius:16px; background:var(--accent-tint); color:var(--accent); display:grid; place-items:center; margin-bottom:18px; }
+
+  /* timeline (plan) */
+  .plan-card{ margin-top:24px; background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius-card); padding:24px 20px; }
+  .plan-name{ font:600 64px/1 var(--font-display); letter-spacing:-0.03em; color:var(--fg-strong); }
+  .plan-desc{ margin-top:8px; font-size:15px; color:var(--muted); line-height:1.45; }
+  .timeline{ display:flex; align-items:center; gap:0; margin-top:22px; }
+  .timeline .seg{ flex:1; height:6px; }
+  .timeline .seg.eat{ background:var(--surface-3); border-radius:3px 0 0 3px; }
+  .timeline .seg.fast{ background:var(--accent); flex:2; }
+  .timeline .seg.eat2{ background:var(--surface-3); border-radius:0 3px 3px 0; }
+  .tl-labels{ display:flex; justify-content:space-between; margin-top:10px; font-size:11.5px; color:var(--faint); letter-spacing:.02em; }
+  .tl-times{ display:flex; justify-content:space-between; margin-top:14px; }
+  .tl-times .t{ font:600 15px/1.2 var(--font-display); color:var(--fg); }
+  .tl-times .t span{ display:block; font:500 12px/1 var(--font-body); color:var(--faint); margin-top:4px; letter-spacing:0; }
+  .reason-list{ margin-top:22px; display:flex; flex-direction:column; gap:10px; }
+  .reason-list .r{ display:flex; gap:11px; align-items:center; font-size:15px; color:var(--fg); }
+  .reason-list .r svg{ flex:0 0 auto; color:var(--accent); }
+
+  /* unit + reminder */
+  .seg-control{ display:flex; background:var(--surface-2); border-radius:12px; padding:3px; gap:3px; }
+  .seg-control button{ flex:1; height:38px; border:none; background:transparent; border-radius:9px; cursor:pointer; font:600 14px/1 var(--font-display); color:var(--muted); transition:.15s; }
+  .seg-control button[aria-selected="true"]{ background:var(--surface); color:var(--fg); box-shadow:0 1px 2px oklch(20% 0.02 150 / .08); }
+  .field-label{ font:600 15px/1.3 var(--font-display); color:var(--muted); margin:24px 0 8px; }
+  .unit-row{ display:flex; gap:10px; }
+  .input-box{ flex:1; height:54px; background:var(--surface); border:1.5px solid var(--border); border-radius:14px; display:flex; align-items:center; padding:0 16px; gap:8px; }
+  .input-box input{ flex:1; border:none; background:transparent; outline:none; font:600 18px/1 var(--font-display); color:var(--fg); font-variant-numeric:tabular-nums; }
+  .input-box .u{ font-size:14px; color:var(--faint); }
+
+  .time-row{ display:flex; align-items:center; gap:12px; padding:15px 16px; background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-row); margin-bottom:10px; }
+  .time-row .t-lbl{ flex:1; font-size:15px; color:var(--fg); }
+  .time-row input[type=time]{ border:none; background:transparent; font:600 17px/1 var(--font-display); color:var(--fg-strong); font-variant-numeric:tabular-nums; outline:none; }
+
+  .switch-row{ display:flex; align-items:center; gap:14px; padding:15px 2px; border-top:0.5px solid var(--border); cursor:pointer; }
+  .switch-row:first-of-type{ border-top:none; }
+  .switch-row .s-txt{ flex:1; }
+  .switch-row .s-txt b{ display:block; font-weight:500; font-size:15.5px; color:var(--fg); }
+  .switch-row .s-txt span{ font-size:13px; color:var(--faint); }
+  .switch{ flex:0 0 auto; width:48px; height:29px; border-radius:99px; background:var(--surface-3); position:relative; transition:.2s; }
+  .switch::after{ content:""; position:absolute; top:2px; left:2px; width:25px; height:25px; border-radius:50%; background:#fff; box-shadow:0 1px 3px oklch(20% 0.02 150/.25); transition:.22s cubic-bezier(.22,.61,.36,1); }
+  .switch-row[aria-checked="true"] .switch{ background:var(--accent); }
+  .switch-row[aria-checked="true"] .switch::after{ transform:translateX(19px); }
+  .switch-sub{ display:none; padding:6px 0 0 30px; }
+  .switch-row[aria-checked="true"] + .switch-sub{ display:block; }
+  .switch-sub input[type=time]{ border:none; background:transparent; font:600 16px/1 var(--font-display); color:var(--accent); outline:none; }
+
+  /* notification previews */
+  .notif-list{ margin-top:24px; display:flex; flex-direction:column; gap:12px; }
+  .notif-card{ background:var(--surface); border:0.5px solid var(--border); border-radius:16px; padding:14px 15px; display:flex; align-items:center; gap:12px; }
+  .notif-card .n-ico{ flex:0 0 auto; width:34px; height:34px; border-radius:9px; background:var(--accent-tint); color:var(--accent); display:grid; place-items:center; }
+  .notif-card .n-txt b{ display:block; font:600 14px/1.3 var(--font-display); color:var(--fg); }
+  .notif-card .n-txt span{ font-size:12.5px; color:var(--faint); }
+
+  /* splash */
+  .splash{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:var(--bg); cursor:pointer; z-index:5; }
+  .splash .logo{ font:700 44px/1 var(--font-display); letter-spacing:-0.03em; color:var(--fg-strong); }
+  .splash .logo .leaf{ display:inline-block; color:var(--accent); }
+  .splash .tagline{ margin-top:14px; font-size:15.5px; color:var(--muted); letter-spacing:.01em; }
+  .splash-go{ margin-top:32px; width:56px; height:56px; border-radius:50%; border:1px solid var(--border); background:var(--surface-2); color:var(--fg); display:grid; place-items:center; cursor:pointer; transition:transform .18s cubic-bezier(.22,.61,.36,1), border-color .15s, color .15s, background .15s; -webkit-tap-highlight-color:transparent; animation:splashGoPulse 3.2s ease-in-out 1.2s infinite; }
+  .splash-go:active{ transform:scale(.9); }
+  .splash-go:hover{ border-color:var(--accent); color:var(--accent); background:var(--accent-tint); }
+  @keyframes splashGoPulse{ 0%,100%{ box-shadow:0 0 0 0 oklch(56% 0.075 165 / 0); } 50%{ box-shadow:0 0 0 10px oklch(56% 0.075 165 / 0.10); } }
+  .splash .hint{ margin-top:16px; font-size:12.5px; color:var(--faint); letter-spacing:.04em; }
+
+  /* result branch */
+  .result-ico{ width:64px; height:64px; border-radius:50%; background:var(--accent-tint); color:var(--accent); display:grid; place-items:center; margin-bottom:20px; }
+  .done-ico{ width:64px; height:64px; border-radius:50%; background:var(--accent); color:var(--accent-fg); display:grid; place-items:center; margin-bottom:20px; }
+
+  .label-link{ display:inline-flex; align-items:center; gap:5px; margin-top:14px; color:var(--muted); font-size:14px; cursor:pointer; background:none; border:none; }
+  .label-link:active{ color:var(--fg); }
+
+  @media (max-width: 440px){
+    body{ padding:0; background:var(--bg); }
+    .phone{ width:100vw; height:100dvh; border-radius:0; box-shadow:none; }
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone" id="phone">
+
+    <!-- status bar -->
+    <div class="island"></div>
+    <div class="statusbar">
+      <span class="sb-time" data-i18n="status.time">上午8:00</span>
+      <span class="sb-right">
+        <!-- signal -->
+        <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="6" width="3" height="6" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1" fill-opacity=".35"/></svg>
+        <!-- wifi -->
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><path d="M8.5 11.5l2-2a2.8 2.8 0 00-4 0l2 2zM4 7a6.4 6.4 0 019 0l-1.4 1.4a4.4 4.4 0 00-6.2 0L4 7zM0 3.1a12.7 12.7 0 0117 0l-1.4 1.4a10.7 10.7 0 00-14.2 0L0 3.1z"/></svg>
+        <!-- battery -->
+        <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0.5" y="0.5" width="22" height="11" rx="3" stroke="currentColor" stroke-opacity=".4"/><rect x="2" y="2" width="17" height="8" rx="1.6" fill="currentColor"/><rect x="24" y="4" width="1.6" height="4" rx="0.8" fill="currentColor" fill-opacity=".4"/></svg>
+      </span>
+    </div>
+
+    <!-- splash O1 -->
+    <div class="splash active" id="splash" data-step="0">
+      <div class="logo">Lighter<span class="leaf">.</span></div>
+      <div class="tagline" data-i18n="splash.tagline">轻松开始，持续坚持。</div>
+      <button class="splash-go" id="splashGo" type="button" aria-label="继续">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+      </button>
+      <div class="hint" data-i18n="splash.hint">轻点继续</div>
+    </div>
+
+    <!-- screen for O2..O10 + result -->
+    <div class="screen" id="screen" style="display:none;">
+      <div class="topbar">
+        <div class="progress"><i id="progBar"></i></div>
+        <button class="lang-pill" id="langBtn" aria-label="切换语言">
+          <span class="dot"></span><span id="langLabel">中 / EN</span>
+        </button>
+      </div>
+
+      <div class="body" id="body">
+
+        <!-- O2 welcome -->
+        <section class="step" data-step="1">
+          <div class="eyebrow" data-i18n="common.welcome_eyebrow">欢迎使用 Lighter</div>
+          <h1 class="h-title lg" data-i18n="welcome.title">更轻松地开始断食</h1>
+          <p class="lede" data-i18n="welcome.desc">根据你的真实生活安排断食，不追求极端，也不给自己压力。</p>
+          <div class="value-list">
+            <div class="value-item"><span class="v-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-7-10a5 5 0 019-3 5 5 0 019 3c0 5.5-7 10-7 10z" opacity=".0"/><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></span><span class="v-txt" data-i18n="welcome.value1">适合新手的温和计划</span></div>
+            <div class="value-item"><span class="v-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="v-txt" data-i18n="welcome.value2">可以随时调整的时间安排</span></div>
+            <div class="value-item"><span class="v-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 14s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="10" r=".6" fill="currentColor"/><circle cx="15" cy="10" r=".6" fill="currentColor"/><circle cx="12" cy="12" r="9"/></svg></span><span class="v-txt" data-i18n="welcome.value3">没有批评和羞耻感的进度反馈</span></div>
+          </div>
+        </section>
+
+        <!-- O3 safety -->
+        <section class="step" data-step="2">
+          <div class="hero-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></div>
+          <h1 class="h-title" data-i18n="safety.title">你的身体感受最重要</h1>
+          <div class="safe-list">
+            <div class="safe-item"><span class="s-no">1</span><span class="s-txt"><b data-i18n="safety.point1">从温和的计划开始</b><span data-i18n="safety.point1d">不要一上来就挑战长时间断食</span></span></div>
+            <div class="safe-item"><span class="s-no">2</span><span class="s-txt"><b data-i18n="safety.point2">身体不适时及时停止</b><span data-i18n="safety.point2d">头晕、心慌、极度饥饿时立即进食</span></span></div>
+            <div class="safe-item"><span class="s-no">3</span><span class="s-txt"><b data-i18n="safety.point3">不确定时咨询专业人士</b><span data-i18n="safety.point3d">有基础疾病请先与医生确认</span></span></div>
+          </div>
+          <div class="consent" id="consent" role="checkbox" aria-checked="false" tabindex="0">
+            <span class="c-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span>
+            <span class="c-txt" data-i18n="safety.check">我理解 Lighter 不提供医疗诊断或医疗建议</span>
+          </div>
+        </section>
+
+        <!-- O4 screening -->
+        <section class="step" data-step="3">
+          <div class="eyebrow" data-i18n="common.step">第 3 步</div>
+          <h1 class="h-title" data-i18n="screen.title">在制定计划前，请先确认</h1>
+          <p class="lede" data-i18n="screen.q">以下情况是否有任何一项符合你？</p>
+          <div class="opt-list" id="riskList">
+            <button class="opt check" data-risk="r1" role="checkbox" aria-checked="false"><span class="lbl" data-i18n="screen.r1">我未满 18 岁</span><span class="radio"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+            <button class="opt check" data-risk="r2" role="checkbox" aria-checked="false"><span class="lbl" data-i18n="screen.r2">我处于孕期或哺乳期</span><span class="radio"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+            <button class="opt check" data-risk="r3" role="checkbox" aria-checked="false"><span class="lbl" data-i18n="screen.r3">我患有 1 型糖尿病</span><span class="radio"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+            <button class="opt check" data-risk="r4" role="checkbox" aria-checked="false"><span class="lbl" data-i18n="screen.r4">我目前或过去有进食障碍</span><span class="radio"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+            <button class="opt check" data-risk="r5" role="checkbox" aria-checked="false"><span class="lbl" data-i18n="screen.r5">我正在服药，或存在可能影响断食的健康问题</span><span class="radio"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+            <button class="opt check" data-risk="none" role="checkbox" aria-checked="false"><span class="lbl" data-i18n="screen.none">以上都不符合</span><span class="radio"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+          </div>
+        </section>
+
+        <!-- O4 result branch -->
+        <section class="step" data-step="result">
+          <div class="result-ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></div>
+          <h1 class="h-title" data-i18n="screen.result.title">断食计划可能不适合你</h1>
+          <p class="lede" data-i18n="screen.result.desc">出于安全考虑，Lighter 无法为你生成断食计划。你的健康比计划更重要。</p>
+          <div class="safe-list" style="margin-top:22px;">
+            <div class="safe-item"><span class="s-no">•</span><span class="s-txt"><span data-i18n="screen.result.tip1">建议先咨询医生，确认是否可以进行断食</span></span></div>
+            <div class="safe-item"><span class="s-no">•</span><span class="s-txt"><span data-i18n="screen.result.tip2">仍可查看断食相关的安全知识</span></span></div>
+          </div>
+        </section>
+
+        <!-- O5 goal -->
+        <section class="step" data-step="4">
+          <div class="eyebrow" data-i18n="common.step">第 4 步</div>
+          <h1 class="h-title" data-i18n="goal.title">你最想改善什么？</h1>
+          <div class="opt-list" id="goalList">
+            <button class="opt" data-goal="weight" role="radio" aria-checked="false"><span class="lbl" data-i18n="goal.opt1">稳定地减轻体重</span><span class="radio"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+            <button class="opt" data-goal="rhythm" role="radio" aria-checked="false"><span class="lbl" data-i18n="goal.opt2">建立规律的饮食节奏</span><span class="radio"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+            <button class="opt" data-goal="night" role="radio" aria-checked="false"><span class="lbl" data-i18n="goal.opt3">减少夜间进食</span><span class="radio"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+            <button class="opt" data-goal="timing" role="radio" aria-checked="false"><span class="lbl" data-i18n="goal.opt4">更好地管理进食时间</span><span class="radio"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+          </div>
+          <div class="opt-title" data-i18n="goal.optional">目标体重（可选）</div>
+          <div class="unit-row">
+            <div class="input-box"><input type="number" inputmode="decimal" placeholder="—" id="goalWeight" /><span class="u" id="goalUnit">磅</span></div>
+          </div>
+          <p class="footnote" style="text-align:left;margin-top:12px;" data-i18n="goal.note">我们不设完成日期，也不承诺减重速度。</p>
+        </section>
+
+        <!-- O6 routine -->
+        <section class="step" data-step="5">
+          <div class="eyebrow" data-i18n="common.step">第 5 步</div>
+          <h1 class="h-title" data-i18n="routine.title">让计划适应你的生活</h1>
+          <p class="lede" data-i18n="routine.note">这些时间以后都可以修改。</p>
+          <div class="opt-title" data-i18n="routine.first_meal">我通常几点吃第一餐</div>
+          <div class="time-row"><span class="t-lbl" data-i18n="routine.first_meal">第一餐时间</span><input type="time" value="08:00" /></div>
+          <div class="opt-title" data-i18n="routine.last_meal">我通常几点结束最后一餐</div>
+          <div class="time-row"><span class="t-lbl" data-i18n="routine.last_meal">最后一餐时间</span><input type="time" value="20:00" /></div>
+          <div class="opt-title" data-i18n="routine.sleep">我通常几点睡觉</div>
+          <div class="time-row"><span class="t-lbl" data-i18n="routine.sleep">入睡时间</span><input type="time" value="23:30" /></div>
+          <div class="opt-title" data-i18n="routine.schedule">日常作息</div>
+          <div class="seg-control" id="schedSeg">
+            <button aria-selected="true" data-sched="same" data-i18n="routine.same">每天基本相同</button>
+            <button aria-selected="false" data-sched="diff" data-i18n="routine.diff">周末不同</button>
+          </div>
+        </section>
+
+        <!-- O7 experience -->
+        <section class="step" data-step="6">
+          <div class="eyebrow" data-i18n="common.step">第 6 步</div>
+          <h1 class="h-title" data-i18n="exp.title">你对断食有多熟悉？</h1>
+          <div class="opt-list" id="expList">
+            <button class="opt" data-exp="first" role="radio" aria-checked="false"><span class="lbl" data-i18n="exp.opt1">这是我第一次尝试</span><span class="radio"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+            <button class="opt" data-exp="few" role="radio" aria-checked="false"><span class="lbl" data-i18n="exp.opt2">我尝试过几次</span><span class="radio"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+            <button class="opt" data-exp="habit" role="radio" aria-checked="false"><span class="lbl" data-i18n="exp.opt3">断食已经是我的生活习惯</span><span class="radio"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+          </div>
+          <div class="opt-title" data-i18n="exp.sub">过去什么最容易让你中断计划？</div>
+          <div class="opt-list" id="breakList" style="margin-top:10px;">
+            <button class="opt check" data-b="hunger" role="checkbox" aria-checked="false"><span class="lbl" data-i18n="exp.b1">饥饿</span><span class="radio"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+            <button class="opt check" data-b="energy" role="checkbox" aria-checked="false"><span class="lbl" data-i18n="exp.b2">精力不足</span><span class="radio"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+            <button class="opt check" data-b="social" role="checkbox" aria-checked="false"><span class="lbl" data-i18n="exp.b3">社交聚餐</span><span class="radio"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+            <button class="opt check" data-b="schedule" role="checkbox" aria-checked="false"><span class="lbl" data-i18n="exp.b4">作息变化</span><span class="radio"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+            <button class="opt check" data-b="forget" role="checkbox" aria-checked="false"><span class="lbl" data-i18n="exp.b5">经常忘记</span><span class="radio"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+            <button class="opt check" data-b="strict" role="checkbox" aria-checked="false"><span class="lbl" data-i18n="exp.b6">感觉限制太多</span><span class="radio"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+          </div>
+        </section>
+
+        <!-- O8 reminders & units -->
+        <section class="step" data-step="7">
+          <div class="eyebrow" data-i18n="common.step">第 7 步</div>
+          <h1 class="h-title" data-i18n="rem.title">提醒与单位</h1>
+          <div class="field-label" data-i18n="rem.unit">单位</div>
+          <div class="seg-control" id="unitSeg">
+            <button aria-selected="true" data-unit="us" data-i18n="rem.us">美制 · 磅</button>
+            <button aria-selected="false" data-unit="metric" data-i18n="rem.metric">公制 · 千克</button>
+          </div>
+          <div class="field-label" data-i18n="rem.remind">提醒</div>
+          <div class="switch-row" data-sw="start" role="checkbox" aria-checked="true"><div class="s-txt"><b data-i18n="rem.r1">断食开始前提醒我</b><span data-i18n="rem.r1d">提前 30 分钟</span></div><span class="switch"></span></div>
+          <div class="switch-sub"><input type="time" value="19:30" /></div>
+          <div class="switch-row" data-sw="window" role="checkbox" aria-checked="true"><div class="s-txt"><b data-i18n="rem.r2">进食窗口开启时提醒我</b><span data-i18n="rem.r2d">早上第一餐前</span></div><span class="switch"></span></div>
+          <div class="switch-sub"><input type="time" value="07:30" /></div>
+          <div class="switch-row" data-sw="water" role="checkbox" aria-checked="false"><div class="s-txt"><b data-i18n="rem.r3">温和喝水提醒</b><span data-i18n="rem.r3d">断食期间少量多次</span></div><span class="switch"></span></div>
+        </section>
+
+        <!-- O9 plan -->
+        <section class="step" data-step="8">
+          <div class="eyebrow" data-i18n="plan.eyebrow">为你推荐</div>
+          <h1 class="h-title" data-i18n="plan.title">你的温和入门计划</h1>
+          <div class="plan-card">
+            <div class="plan-name">12:12</div>
+            <div class="plan-desc" data-i18n="plan.desc">断食 12 小时，在另外 12 小时内进食。</div>
+            <div class="timeline">
+              <div class="seg eat"></div>
+              <div class="seg fast"></div>
+              <div class="seg eat2"></div>
+            </div>
+            <div class="tl-labels">
+              <span data-i18n="plan.timeline.last">最后一餐</span>
+              <span data-i18n="plan.timeline.fast">断食</span>
+              <span data-i18n="plan.timeline.first">第一餐</span>
+            </div>
+            <div class="tl-times">
+              <div class="t"><b data-i18n="plan.example.start">晚上 8:00</b><span data-i18n="plan.example.start.label">断食开始</span></div>
+              <div class="t"><b data-i18n="plan.example.open">早上 8:00</b><span data-i18n="plan.example.open.label">进食窗口开启</span></div>
+            </div>
+          </div>
+          <div class="reason-list">
+            <div class="r"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg><span data-i18n="plan.reason1">符合你的日常作息</span></div>
+            <div class="r"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg><span data-i18n="plan.reason2">适合第一次尝试</span></div>
+            <div class="r"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg><span data-i18n="plan.reason3">生活变化时可以随时调整</span></div>
+          </div>
+        </section>
+
+        <!-- O10 notifications -->
+        <section class="step" data-step="9">
+          <div class="hero-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 6-2 8-2 8h16s-2-2-2-8z"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></div>
+          <h1 class="h-title" data-i18n="notif.title">不用一直看时间</h1>
+          <p class="lede" data-i18n="notif.desc">开启通知后，Lighter 会在关键节点温和地提醒你。</p>
+          <div class="notif-list">
+            <div class="notif-card"><span class="n-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="n-txt"><b data-i18n="notif.preview1">你的断食将在 30 分钟后开始</b><span data-i18n="notif.preview1d">晚上 7:30</span></span></div>
+            <div class="notif-card"><span class="n-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 11H6L5 8z"/><path d="M9 8a3 3 0 016 0"/></svg></span><span class="n-txt"><b data-i18n="notif.preview2">进食窗口将在 1 小时后开启</b><span data-i18n="notif.preview2d">早上 7:00</span></span></div>
+          </div>
+        </section>
+
+        <!-- done -->
+        <section class="step" data-step="done">
+          <div class="done-ico"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></div>
+          <h1 class="h-title" data-i18n="done.title">准备就绪</h1>
+          <p class="lede" data-i18n="done.desc">你的 12:12 计划已就绪。从今天开始，轻松地迈出第一步。</p>
+        </section>
+
+      </div><!-- /body -->
+
+      <div class="bottom" id="bottom">
+        <!-- rendered by JS -->
+      </div>
+    </div><!-- /screen -->
+
+    <div class="home-indicator"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     i18n — 多语言文案,全部走 key,实时切换不重启
+     ============================================================ */
+  var I18N = {
+    zh:{
+      "status.time":"上午8:00",
+      "splash.tagline":"轻松开始，持续坚持。",
+      "splash.hint":"轻点继续",
+      "common.welcome_eyebrow":"欢迎使用 Lighter",
+      "common.step":"第 {n} 步",
+      "common.continue":"继续",
+      "common.back":"返回",
+      "common.skip":"跳过",
+      "common.adjust":"调整时间",
+      "welcome.title":"更轻松地开始断食",
+      "welcome.desc":"根据你的真实生活安排断食，不追求极端，也不给自己压力。",
+      "welcome.value1":"适合新手的温和计划",
+      "welcome.value2":"可以随时调整的时间安排",
+      "welcome.value3":"没有批评和羞耻感的进度反馈",
+      "welcome.secondary":"我已经有计划",
+      "welcome.note":"Lighter 不是医疗设备。",
+      "safety.title":"你的身体感受最重要",
+      "safety.point1":"从温和的计划开始",
+      "safety.point1d":"不要一上来就挑战长时间断食",
+      "safety.point2":"身体不适时及时停止",
+      "safety.point2d":"头晕、心慌、极度饥饿时立即进食",
+      "safety.point3":"不确定时咨询专业人士",
+      "safety.point3d":"有基础疾病请先与医生确认",
+      "safety.check":"我理解 Lighter 不提供医疗诊断或医疗建议",
+      "safety.link":"了解断食安全",
+      "screen.title":"在制定计划前，请先确认",
+      "screen.q":"以下情况是否有任何一项符合你？",
+      "screen.r1":"我未满 18 岁",
+      "screen.r2":"我处于孕期或哺乳期",
+      "screen.r3":"我患有 1 型糖尿病",
+      "screen.r4":"我目前或过去有进食障碍",
+      "screen.r5":"我正在服药，或存在可能影响断食的健康问题",
+      "screen.none":"以上都不符合",
+      "screen.result.title":"断食计划可能不适合你",
+      "screen.result.desc":"出于安全考虑，Lighter 无法为你生成断食计划。你的健康比计划更重要。",
+      "screen.result.tip1":"建议先咨询医生，确认是否可以进行断食",
+      "screen.result.tip2":"仍可查看断食相关的安全知识",
+      "screen.result.primary":"咨询医疗专业人士",
+      "screen.result.secondary":"查看安全资料",
+      "goal.title":"你最想改善什么？",
+      "goal.opt1":"稳定地减轻体重",
+      "goal.opt2":"建立规律的饮食节奏",
+      "goal.opt3":"减少夜间进食",
+      "goal.opt4":"更好地管理进食时间",
+      "goal.optional":"目标体重（可选）",
+      "goal.unit.us":"磅",
+      "goal.unit.metric":"千克",
+      "goal.note":"我们不设完成日期，也不承诺减重速度。",
+      "routine.title":"让计划适应你的生活",
+      "routine.first_meal":"我通常几点吃第一餐",
+      "routine.last_meal":"我通常几点结束最后一餐",
+      "routine.sleep":"我通常几点睡觉",
+      "routine.schedule":"日常作息",
+      "routine.same":"每天基本相同",
+      "routine.diff":"周末不同",
+      "routine.note":"这些时间以后都可以修改。",
+      "exp.title":"你对断食有多熟悉？",
+      "exp.opt1":"这是我第一次尝试",
+      "exp.opt2":"我尝试过几次",
+      "exp.opt3":"断食已经是我的生活习惯",
+      "exp.sub":"过去什么最容易让你中断计划？",
+      "exp.b1":"饥饿","exp.b2":"精力不足","exp.b3":"社交聚餐","exp.b4":"作息变化","exp.b5":"经常忘记","exp.b6":"感觉限制太多",
+      "rem.title":"提醒与单位",
+      "rem.unit":"单位",
+      "rem.us":"美制 · 磅",
+      "rem.metric":"公制 · 千克",
+      "rem.remind":"提醒",
+      "rem.r1":"断食开始前提醒我",
+      "rem.r1d":"提前 30 分钟",
+      "rem.r2":"进食窗口开启时提醒我",
+      "rem.r2d":"早上第一餐前",
+      "rem.r3":"温和喝水提醒",
+      "rem.r3d":"断食期间少量多次",
+      "rem.generate":"生成我的入门计划",
+      "plan.eyebrow":"为你推荐",
+      "plan.title":"你的温和入门计划",
+      "plan.desc":"断食 12 小时，在另外 12 小时内进食。",
+      "plan.timeline.last":"最后一餐",
+      "plan.timeline.fast":"断食",
+      "plan.timeline.first":"第一餐",
+      "plan.example.start":"晚上 8:00",
+      "plan.example.start.label":"断食开始",
+      "plan.example.open":"早上 8:00",
+      "plan.example.open.label":"进食窗口开启",
+      "plan.reason1":"符合你的日常作息",
+      "plan.reason2":"适合第一次尝试",
+      "plan.reason3":"生活变化时可以随时调整",
+      "plan.start":"开始 12:12 计划",
+      "plan.adjust":"调整时间",
+      "notif.title":"不用一直看时间",
+      "notif.desc":"开启通知后，Lighter 会在关键节点温和地提醒你。",
+      "notif.preview1":"你的断食将在 30 分钟后开始",
+      "notif.preview1d":"晚上 7:30",
+      "notif.preview2":"进食窗口将在 1 小时后开启",
+      "notif.preview2d":"早上 7:00",
+      "notif.enable":"开启通知",
+      "notif.later":"稍后再说",
+      "done.title":"准备就绪",
+      "done.desc":"你的 12:12 计划已就绪。从今天开始，轻松地迈出第一步。",
+      "done.enter":"进入今日"
+    },
+    en:{
+      "status.time":"8:00 AM",
+      "splash.tagline":"Start gently. Fast consistently.",
+      "splash.hint":"Tap to continue",
+      "common.welcome_eyebrow":"Welcome to Lighter",
+      "common.step":"Step {n}",
+      "common.continue":"Continue",
+      "common.back":"Back",
+      "common.skip":"Skip",
+      "common.adjust":"Adjust times",
+      "welcome.title":"A gentler way to start fasting",
+      "welcome.desc":"Plan fasting around your real life — no extremes, no pressure.",
+      "welcome.value1":"Gentle plans for beginners",
+      "welcome.value2":"A schedule you can adjust anytime",
+      "welcome.value3":"Progress feedback without judgment",
+      "welcome.secondary":"I already have a plan",
+      "welcome.note":"Lighter is not a medical device.",
+      "safety.title":"Your wellbeing comes first",
+      "safety.point1":"Start with a gentle plan",
+      "safety.point1d":"Don't jump into long fasts right away",
+      "safety.point2":"Stop if you feel unwell",
+      "safety.point2d":"Eat right away if dizzy, shaky, or very hungry",
+      "safety.point3":"Ask a professional when unsure",
+      "safety.point3d":"Check with a doctor if you have a condition",
+      "safety.check":"I understand Lighter does not provide medical diagnosis or advice",
+      "safety.link":"Learn about fasting safety",
+      "screen.title":"Before making a plan, please confirm",
+      "screen.q":"Does any of the following apply to you?",
+      "screen.r1":"I'm under 18",
+      "screen.r2":"I'm pregnant or breastfeeding",
+      "screen.r3":"I have type 1 diabetes",
+      "screen.r4":"I have or had an eating disorder",
+      "screen.r5":"I take medication or have a condition that may affect fasting",
+      "screen.none":"None of the above apply",
+      "screen.result.title":"A fasting plan may not be right for you",
+      "screen.result.desc":"For your safety, Lighter can't create a fasting plan for you. Your health matters more than any plan.",
+      "screen.result.tip1":"Please consult a doctor before trying fasting",
+      "screen.result.tip2":"You can still read about fasting safety",
+      "screen.result.primary":"Consult a healthcare professional",
+      "screen.result.secondary":"Read safety info",
+      "goal.title":"What do you want to improve most?",
+      "goal.opt1":"Lose weight steadily",
+      "goal.opt2":"Build a regular eating rhythm",
+      "goal.opt3":"Eat less at night",
+      "goal.opt4":"Manage eating times better",
+      "goal.optional":"Target weight (optional)",
+      "goal.unit.us":"lb",
+      "goal.unit.metric":"kg",
+      "goal.note":"We don't set a deadline or promise a rate of loss.",
+      "routine.title":"Let the plan fit your life",
+      "routine.first_meal":"When I usually eat my first meal",
+      "routine.last_meal":"When I usually finish my last meal",
+      "routine.sleep":"When I usually go to sleep",
+      "routine.schedule":"Daily routine",
+      "routine.same":"About the same every day",
+      "routine.diff":"Different on weekends",
+      "routine.note":"You can change these times later.",
+      "exp.title":"How familiar are you with fasting?",
+      "exp.opt1":"This is my first time",
+      "exp.opt2":"I've tried a few times",
+      "exp.opt3":"Fasting is already my routine",
+      "exp.sub":"What usually broke your plan?",
+      "exp.b1":"Hunger","exp.b2":"Low energy","exp.b3":"Social meals","exp.b4":"Schedule changes","exp.b5":"Forgetting","exp.b6":"Too restrictive",
+      "rem.title":"Reminders & units",
+      "rem.unit":"Units",
+      "rem.us":"Imperial · lb",
+      "rem.metric":"Metric · kg",
+      "rem.remind":"Reminders",
+      "rem.r1":"Remind me before fasting starts",
+      "rem.r1d":"30 minutes ahead",
+      "rem.r2":"Remind me when eating window opens",
+      "rem.r2d":"Before first meal",
+      "rem.r3":"Gentle water reminders",
+      "rem.r3d":"Small sips while fasting",
+      "rem.generate":"Create my starter plan",
+      "plan.eyebrow":"Recommended for you",
+      "plan.title":"Your gentle starter plan",
+      "plan.desc":"Fast for 12 hours, eat in the other 12.",
+      "plan.timeline.last":"Last meal",
+      "plan.timeline.fast":"Fast",
+      "plan.timeline.first":"First meal",
+      "plan.example.start":"8:00 PM",
+      "plan.example.start.label":"Fast starts",
+      "plan.example.open":"8:00 AM",
+      "plan.example.open.label":"Eating window opens",
+      "plan.reason1":"Fits your daily routine",
+      "plan.reason2":"Good for a first try",
+      "plan.reason3":"Easy to adjust as life changes",
+      "plan.start":"Start the 12:12 plan",
+      "plan.adjust":"Adjust times",
+      "notif.title":"No need to keep checking the time",
+      "notif.desc":"With notifications on, Lighter nudges you at the moments that matter.",
+      "notif.preview1":"Your fast starts in 30 minutes",
+      "notif.preview1d":"7:30 PM",
+      "notif.preview2":"Your eating window opens in 1 hour",
+      "notif.preview2d":"7:00 AM",
+      "notif.enable":"Turn on notifications",
+      "notif.later":"Maybe later",
+      "done.title":"You're all set",
+      "done.desc":"Your 12:12 plan is ready. Take the first gentle step today.",
+      "done.enter":"Go to Today"
+    }
+  };
+
+  var STORE_LANG = "lighter:lang";
+  var STORE_STEP = "lighter:onb:step";
+  var lang = localStorage.getItem(STORE_LANG) || "zh";
+
+  // 步骤顺序(不含 splash, splash 为 step 0)
+  var ORDER = [1,2,3,4,5,6,7,8,9,"done"];
+  var idx = 0; // index into ORDER
+  var state = {
+    consent:false,
+    risk:null,            // 'none' | array of risk keys
+    goal:null,
+    exp:null,
+    onResult:false,       // safety-result branch active
+    unit:"us"
+  };
+
+  var elScreen = document.getElementById("screen");
+  var elSplash = document.getElementById("splash");
+  var elBody = document.getElementById("body");
+  var elBottom = document.getElementById("bottom");
+  var elProg = document.getElementById("progBar");
+  var elLangBtn = document.getElementById("langBtn");
+  var elLangLabel = document.getElementById("langLabel");
+
+  /* ---------- i18n apply ---------- */
+  function t(key){
+    var d = I18N[lang];
+    var v = d[key];
+    if(v === undefined) v = I18N.zh[key];
+    return v;
+  }
+  function applyLang(){
+    document.documentElement.lang = lang === "zh" ? "zh-CN" : "en-US";
+    document.querySelectorAll("[data-i18n]").forEach(function(node){
+      var key = node.getAttribute("data-i18n");
+      var val = t(key);
+      if(val === undefined || val === null) return;
+      if(key === "common.step"){ return; } // handled per-step below
+      // text nodes only — keep child icons
+      if(node.children.length){
+        // node has element children (e.g. icon spans); set only direct text
+        // find first text node
+        var replaced = false;
+        for(var i=0;i<node.childNodes.length;i++){
+          if(node.childNodes[i].nodeType === 3){ node.childNodes[i].nodeValue = val; replaced = true; break; }
+        }
+        if(!replaced){ node.textContent = val; }
+      } else {
+        node.textContent = val;
+      }
+    });
+    // step eyebrow numbering
+    var stepNo = 0;
+    document.querySelectorAll(".step .eyebrow[data-i18n='common.step']").forEach(function(eb){
+      var s = eb.closest(".step");
+      if(!s) return;
+      var d = s.getAttribute("data-step");
+      var map = {"2":1,"3":2,"4":3,"5":4,"6":5,"7":6};
+      if(map[d]){ eb.textContent = t("common.step").replace("{n}", map[d]); }
+    });
+    // unit label
+    var gu = document.getElementById("goalUnit");
+    if(gu){ gu.textContent = state.unit === "metric" ? t("goal.unit.metric") : t("goal.unit.us"); }
+    elLangLabel.textContent = lang === "zh" ? "中 / EN" : "中 / EN";
+    renderBottom();
+  }
+
+  /* ---------- step rendering ---------- */
+  function showStep(){
+    state.onResult = false;
+    var current = ORDER[idx];
+    document.querySelectorAll(".step").forEach(function(s){
+      s.classList.toggle("active", s.getAttribute("data-step") === String(current));
+    });
+    // progress bar (9 question steps + done)
+    var pct;
+    if(current === "done"){ pct = 1; }
+    else { pct = (idx) / (ORDER.length-1); }
+    elProg.style.width = Math.round(pct*100) + "%";
+    elBody.scrollTop = 0;
+    renderBottom();
+    try{ localStorage.setItem(STORE_STEP, String(idx)); }catch(e){}
+  }
+
+  function renderBottom(){
+    var current = state.onResult ? "result" : ORDER[idx];
+    elBottom.className = "bottom";
+    elBottom.innerHTML = "";
+    var html = "";
+
+    if(current === 1){ // welcome
+      html = '<button class="btn btn-primary" data-act="next">'+t("common.continue")+'</button>'
+           + '<button class="btn btn-ghost" data-act="skip">'+t("welcome.secondary")+'</button>'
+           + '<div class="footnote">'+t("welcome.note")+'</div>';
+    } else if(current === 2){ // safety
+      html = '<button class="btn btn-primary" data-act="next" '+(state.consent?'':'disabled')+'>'+t("common.continue")+'</button>'
+           + '<div style="text-align:center;margin-top:6px;"><button class="label-link" data-act="learn">'+t("safety.link")+' ›</button></div>';
+    } else if(current === 3){ // screening
+      var ready = state.risk !== null;
+      html = '<button class="btn btn-primary" data-act="risk-next" '+(ready?'':'disabled')+'>'+t("common.continue")+'</button>';
+    } else if(current === "result"){
+      html = '<button class="btn btn-primary" data-act="consult">'+t("screen.result.primary")+'</button>'
+           + '<button class="btn btn-ghost" data-act="read">'+t("screen.result.secondary")+'</button>'
+           + '<button class="btn btn-text" data-act="back-result">'+t("common.back")+'</button>';
+    } else if(current === 4){ // goal
+      html = '<button class="btn btn-primary" data-act="next" '+(state.goal?'':'disabled')+'>'+t("common.continue")+'</button>';
+    } else if(current === 5 || current === 6 || current === 7){ // routine / exp / reminders
+      var lbl = (current === 7) ? t("rem.generate") : t("common.continue");
+      html = '<button class="btn btn-primary" data-act="next">'+lbl+'</button>';
+    } else if(current === 8){ // plan
+      html = '<button class="btn btn-primary" data-act="next">'+t("plan.start")+'</button>'
+           + '<button class="btn btn-ghost" data-act="adjust">'+t("plan.adjust")+'</button>';
+    } else if(current === 9){ // notifications
+      html = '<button class="btn btn-primary" data-act="next">'+t("notif.enable")+'</button>'
+           + '<button class="btn btn-text" data-act="later">'+t("notif.later")+'</button>';
+    } else if(current === "done"){
+      html = '<a class="btn btn-primary" href="index.html" style="text-decoration:none;">'+t("done.enter")+'</a>';
+    }
+    elBottom.innerHTML = html;
+    elBottom.querySelectorAll("[data-act]").forEach(function(b){
+      b.addEventListener("click", onAction);
+    });
+  }
+
+  function onAction(e){
+    var act = e.currentTarget.getAttribute("data-act");
+    var current = ORDER[idx];
+    if(act === "next" || act === "later"){
+      if(idx < ORDER.length-1){ idx++; showStep(); }
+    } else if(act === "risk-next"){
+      // branch: any risk selected -> result; none -> continue
+      var riskVal = state.risk;
+      if(riskVal === "none"){ idx++; showStep(); }
+      else { // go to result branch (insert)
+        showResultBranch();
+      }
+    } else if(act === "back-result"){
+      showStep();
+    } else if(act === "consult" || act === "read"){
+      // stay; in real app opens external. keep on result.
+      e.currentTarget.style.opacity = .6;
+    } else if(act === "skip"){
+      // "I already have a plan" -> jump to plan step
+      idx = ORDER.indexOf(8); showStep();
+    } else if(act === "adjust"){
+      idx = ORDER.indexOf(5); showStep(); // back to routine
+    } else if(act === "learn"){
+      e.currentTarget.style.opacity = .6;
+    }
+  }
+
+  function showResultBranch(){
+    state.onResult = true;
+    document.querySelectorAll(".step").forEach(function(s){
+      s.classList.toggle("active", s.getAttribute("data-step") === "result");
+    });
+    elProg.style.width = "33%";
+    elBody.scrollTop = 0;
+    renderBottom();
+  }
+
+  function back(){
+    if(idx > 0){ idx--; showStep(); }
+  }
+
+  /* ---------- interactions ---------- */
+  // splash tap
+  var splashEntered = false;
+  function enterApp(){
+    if(splashEntered) return;
+    splashEntered = true;
+    elSplash.style.display = "none";
+    elScreen.style.display = "flex";
+    showStep();
+  }
+  elSplash.addEventListener("click", enterApp);
+  var splashGo = document.getElementById("splashGo");
+  if(splashGo){
+    splashGo.addEventListener("click", function(e){ e.stopPropagation(); enterApp(); });
+    splashGo.addEventListener("keydown", function(e){ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); enterApp(); } });
+  }
+
+  // consent
+  var consent = document.getElementById("consent");
+  consent.addEventListener("click", function(){
+    state.consent = !state.consent;
+    consent.setAttribute("aria-checked", state.consent);
+    renderBottom();
+  });
+
+  // risk list (mutually exclusive: none vs others)
+  var riskBtns = document.querySelectorAll("#riskList .opt");
+  riskBtns.forEach(function(b){
+    b.addEventListener("click", function(){
+      var k = b.getAttribute("data-risk");
+      if(k === "none"){
+        // clear all risks
+        state.risk = "none";
+        riskBtns.forEach(function(x){ x.setAttribute("aria-checked", "false"); });
+        b.setAttribute("aria-checked", "true");
+      } else {
+        // uncheck none, toggle this
+        var noneBtn = document.querySelector('#riskList .opt[data-risk="none"]');
+        noneBtn.setAttribute("aria-checked","false");
+        var cur = b.getAttribute("aria-checked") === "true";
+        b.setAttribute("aria-checked", !cur);
+        // recompute
+        var sel = [];
+        riskBtns.forEach(function(x){
+          if(x.getAttribute("data-risk") !== "none" && x.getAttribute("aria-checked") === "true") sel.push(x.getAttribute("data-risk"));
+        });
+        state.risk = sel.length ? sel : null;
+      }
+      renderBottom();
+    });
+  });
+
+  // goal radio
+  document.querySelectorAll("#goalList .opt").forEach(function(b){
+    b.addEventListener("click", function(){
+      state.goal = b.getAttribute("data-goal");
+      document.querySelectorAll("#goalList .opt").forEach(function(x){ x.setAttribute("aria-checked","false"); });
+      b.setAttribute("aria-checked","true");
+      renderBottom();
+    });
+  });
+
+  // experience radio
+  document.querySelectorAll("#expList .opt").forEach(function(b){
+    b.addEventListener("click", function(){
+      state.exp = b.getAttribute("data-exp");
+      document.querySelectorAll("#expList .opt").forEach(function(x){ x.setAttribute("aria-checked","false"); });
+      b.setAttribute("aria-checked","true");
+    });
+  });
+
+  // break multi
+  document.querySelectorAll("#breakList .opt").forEach(function(b){
+    b.addEventListener("click", function(){
+      var cur = b.getAttribute("aria-checked") === "true";
+      b.setAttribute("aria-checked", !cur);
+    });
+  });
+
+  // unit seg
+  var unitSeg = document.getElementById("unitSeg");
+  unitSeg.querySelectorAll("button").forEach(function(b){
+    b.addEventListener("click", function(){
+      state.unit = b.getAttribute("data-unit");
+      unitSeg.querySelectorAll("button").forEach(function(x){ x.setAttribute("aria-selected","false"); });
+      b.setAttribute("aria-selected","true");
+      var gu = document.getElementById("goalUnit");
+      if(gu){ gu.textContent = state.unit === "metric" ? t("goal.unit.metric") : t("goal.unit.us"); }
+    });
+  });
+  state.unit = "us";
+
+  // schedule seg
+  var schedSeg = document.getElementById("schedSeg");
+  schedSeg.querySelectorAll("button").forEach(function(b){
+    b.addEventListener("click", function(){
+      schedSeg.querySelectorAll("button").forEach(function(x){ x.setAttribute("aria-selected","false"); });
+      b.setAttribute("aria-selected","true");
+    });
+  });
+
+  // switches
+  document.querySelectorAll(".switch-row").forEach(function(r){
+    r.addEventListener("click", function(){
+      var cur = r.getAttribute("aria-checked") === "true";
+      r.setAttribute("aria-checked", !cur);
+    });
+  });
+
+  // language toggle
+  elLangBtn.addEventListener("click", function(){
+    lang = lang === "zh" ? "en" : "zh";
+    try{ localStorage.setItem(STORE_LANG, lang); }catch(e){}
+    applyLang();
+  });
+
+  /* ---------- boot ---------- */
+  applyLang();
+  // restore step (only if past splash)
+  try{
+    var saved = parseInt(localStorage.getItem(STORE_STEP)||"0",10);
+    if(!isNaN(saved) && saved > 0 && saved < ORDER.length){
+      // jump past splash
+      elSplash.style.display = "none";
+      elScreen.style.display = "flex";
+      idx = saved;
+    }
+  }catch(e){}
+  if(elScreen.style.display !== "none"){
+    showStep();
+  }
+})();
+</script>
+</body>
+</html>

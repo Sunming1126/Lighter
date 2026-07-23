@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'core/contracts.dart';
+import 'core/theme/app_theme.dart';
 import 'data/database/app_database.dart';
 import 'data/repositories/app_repository.dart';
 import 'data/services/notification_service.dart';
@@ -70,23 +71,50 @@ final dailyHealthProvider = StreamProvider.family<DailyHealthLog?, String>((
   return ref.watch(repositoryProvider).watchDailyHealth(dateKey);
 });
 
+final calorieEntriesProvider =
+    StreamProvider.family<List<CalorieEntry>, String>((ref, dateKey) {
+      return ref.watch(repositoryProvider).watchCalories(dateKey);
+    });
+
+final dailyTasksProvider = StreamProvider<List<DailyTask>>((ref) {
+  return ref.watch(repositoryProvider).watchDailyTasks();
+});
+
+final taskProgressProvider =
+    StreamProvider.family<List<TaskProgressEntry>, String>((ref, dateKey) {
+      return ref.watch(repositoryProvider).watchTaskProgress(dateKey);
+    });
+
 String localDateKey(DateTime value) =>
     '${value.year.toString().padLeft(4, '0')}-'
     '${value.month.toString().padLeft(2, '0')}-'
     '${value.day.toString().padLeft(2, '0')}';
 
 class AppController extends ChangeNotifier {
-  AppController({required this.repository, required this.authService});
+  AppController({
+    required this.repository,
+    required this.authService,
+    required this.notificationService,
+  });
 
   final AppRepository repository;
   final AuthService authService;
+  final NotificationService notificationService;
 
   bool initialized = false;
   bool onboardingComplete = false;
   int onboardingStep = 0;
   LanguagePreference language = LanguagePreference.system;
+  AppAccentTheme accentTheme = AppAccentTheme.mint;
   UnitSystem unitSystem = UnitSystem.imperial;
   bool liquidMetric = false;
+  int waterGoalMl = 2000;
+  int stepGoal = 8000;
+  int quickWaterMl = 250;
+  int? calorieGoal;
+  double? targetWeightKg;
+  HealthReadStatus healthStepStatus = HealthReadStatus.permissionRequired;
+  bool syncingHealthSteps = false;
   AuthSession? authSession;
 
   Locale? get locale => switch (language) {
@@ -100,14 +128,36 @@ class AppController extends ChangeNotifier {
     onboardingComplete = onboarding?.completed ?? false;
     onboardingStep = onboarding?.currentStep ?? 0;
     language = _languageFrom(await repository.getPreference('language'));
+    accentTheme = _accentThemeFrom(
+      await repository.getPreference('accentTheme'),
+    );
     unitSystem = (await repository.getPreference('unitSystem')) == 'metric'
         ? UnitSystem.metric
         : UnitSystem.imperial;
     liquidMetric = (await repository.getPreference('liquidMetric')) == 'true';
+    waterGoalMl =
+        int.tryParse(await repository.getPreference('waterGoalMl') ?? '') ??
+        2000;
+    stepGoal =
+        int.tryParse(await repository.getPreference('stepGoal') ?? '') ?? 8000;
+    quickWaterMl =
+        int.tryParse(await repository.getPreference('quickWaterMl') ?? '') ??
+        250;
+    calorieGoal = int.tryParse(
+      await repository.getPreference('calorieGoal') ?? '',
+    );
+    targetWeightKg = double.tryParse(
+      await repository.getPreference('targetWeightKg') ?? '',
+    );
     authSession = await authService.restore();
     await repository.ensureDefaultPlan();
+    await repository.ensureDefaultDailyTasks();
     initialized = true;
     notifyListeners();
+    if (await repository.getPreference('healthStepsPermissionRequested') ==
+        'true') {
+      await refreshHealthSteps();
+    }
   }
 
   Future<void> completeOnboarding(Map<String, Object?> answers) async {
@@ -140,12 +190,68 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setAccentTheme(AppAccentTheme value) async {
+    accentTheme = value;
+    await repository.setPreference('accentTheme', value.name);
+    notifyListeners();
+  }
+
   Future<void> setUnits(UnitSystem value, {bool? metricLiquid}) async {
     unitSystem = value;
     if (metricLiquid != null) liquidMetric = metricLiquid;
     await repository.setPreference('unitSystem', value.name);
     await repository.setPreference('liquidMetric', liquidMetric.toString());
     notifyListeners();
+  }
+
+  Future<void> setWaterGoal(int value) async {
+    if (value < 250 || value > 10000) return;
+    waterGoalMl = value;
+    await repository.setPreference('waterGoalMl', '$value');
+    notifyListeners();
+  }
+
+  Future<void> setStepGoal(int value) async {
+    if (value < 500 || value > 100000) return;
+    stepGoal = value;
+    await repository.setPreference('stepGoal', '$value');
+    notifyListeners();
+  }
+
+  Future<void> setQuickWater(int value) async {
+    if (value < 10 || value > 5000) return;
+    quickWaterMl = value;
+    await repository.setPreference('quickWaterMl', '$value');
+    notifyListeners();
+  }
+
+  Future<void> setCalorieGoal(int? value) async {
+    calorieGoal = value;
+    await repository.setPreference('calorieGoal', value?.toString() ?? '');
+    notifyListeners();
+  }
+
+  Future<void> setTargetWeightKg(double? value) async {
+    targetWeightKg = value;
+    await repository.setPreference('targetWeightKg', value?.toString() ?? '');
+    notifyListeners();
+  }
+
+  Future<StepReadResult> refreshHealthSteps({
+    bool requestPermission = false,
+  }) async {
+    if (syncingHealthSteps) {
+      return StepReadResult(status: healthStepStatus);
+    }
+    syncingHealthSteps = true;
+    notifyListeners();
+    final result = await repository.syncTodaySteps(
+      requestPermission: requestPermission,
+    );
+    healthStepStatus = result.status;
+    syncingHealthSteps = false;
+    notifyListeners();
+    return result;
   }
 
   Future<void> setAuthSession(AuthSession? value) async {
@@ -174,94 +280,73 @@ class AppController extends ChangeNotifier {
 
   Future<File> exportCsv() async {
     final data = await repository.exportSnapshot();
-    final rows = <List<Object?>>[
-      const [
-        'recordType',
-        'id',
-        'startedAtUtcMs',
-        'endedAtUtcMs',
-        'targetMinutes',
-        'endReason',
-        'milliliters',
-        'kilograms',
-        'loggedAtUtcMs',
-        'deletedAtUtcMs',
-        'dateKey',
-        'calories',
-        'steps',
-      ],
+    const columns = [
+      'recordType',
+      'id',
+      'startedAtUtcMs',
+      'endedAtUtcMs',
+      'targetMinutes',
+      'endReason',
+      'milliliters',
+      'kilograms',
+      'loggedAtUtcMs',
+      'deletedAtUtcMs',
+      'dateKey',
+      'calories',
+      'steps',
+      'mealType',
+      'stepSource',
+      'stepsSyncedAtUtcMs',
+      'taskId',
+      'kind',
+      'title',
+      'iconKey',
+      'colorKey',
+      'goalType',
+      'targetValue',
+      'unit',
+      'quickIncrement',
+      'weekdaysMask',
+      'reminderMinute',
+      'sortOrder',
+      'enabled',
+      'deltaValue',
+      'goalSnapshot',
+      'unitSnapshot',
     ];
-    for (final raw in (data['sessions'] as List<Object?>? ?? const [])) {
-      final row = raw as Map<String, Object?>;
-      rows.add([
-        'fastingSession',
-        row['id'],
-        row['startedAtUtcMs'],
-        row['endedAtUtcMs'],
-        row['targetMinutes'],
-        row['endReason'],
-        null,
-        null,
-        null,
-        row['deletedAtUtcMs'],
-        null,
-        null,
-        null,
-      ]);
+    final rows = <List<Object?>>[columns];
+    void append(String recordType, Object? raw) {
+      final record = raw! as Map<String, Object?>;
+      rows.add(
+        columns
+            .map<Object?>(
+              (column) => column == 'recordType' ? recordType : record[column],
+            )
+            .toList(),
+      );
     }
-    for (final raw in (data['waterEntries'] as List<Object?>? ?? const [])) {
-      final row = raw as Map<String, Object?>;
-      rows.add([
-        'waterEntry',
-        row['id'],
-        null,
-        null,
-        null,
-        null,
-        row['milliliters'],
-        null,
-        row['loggedAtUtcMs'],
-        row['deletedAtUtcMs'],
-        null,
-        null,
-        null,
-      ]);
+
+    for (final row in (data['sessions'] as List<Object?>? ?? const [])) {
+      append('fastingSession', row);
     }
-    for (final raw in (data['weightEntries'] as List<Object?>? ?? const [])) {
-      final row = raw as Map<String, Object?>;
-      rows.add([
-        'weightEntry',
-        row['id'],
-        null,
-        null,
-        null,
-        null,
-        null,
-        row['kilograms'],
-        row['loggedAtUtcMs'],
-        row['deletedAtUtcMs'],
-        null,
-        null,
-        null,
-      ]);
+    for (final row in (data['waterEntries'] as List<Object?>? ?? const [])) {
+      append('waterEntry', row);
     }
-    for (final raw in (data['dailyHealthLogs'] as List<Object?>? ?? const [])) {
-      final row = raw as Map<String, Object?>;
-      rows.add([
-        'dailyHealthLog',
-        row['id'],
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        row['deletedAtUtcMs'],
-        row['dateKey'],
-        row['calories'],
-        row['steps'],
-      ]);
+    for (final row in (data['weightEntries'] as List<Object?>? ?? const [])) {
+      append('weightEntry', row);
+    }
+    for (final row in (data['dailyHealthLogs'] as List<Object?>? ?? const [])) {
+      append('dailyHealthLog', row);
+    }
+    for (final row in (data['calorieEntries'] as List<Object?>? ?? const [])) {
+      append('calorieEntry', row);
+    }
+    for (final row in (data['dailyTasks'] as List<Object?>? ?? const [])) {
+      append('dailyTask', row);
+    }
+    for (final row
+        in (data['taskProgressEntries'] as List<Object?>? ?? const [])) {
+      append('taskProgressEntry', row);
     }
     final csv = rows
         .map((row) => row.map(_csvCell).join(','))
@@ -297,15 +382,27 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> clearData() async {
+    final tasks = await repository.getDailyTasks();
+    for (final task in tasks) {
+      await notificationService.cancelTaskReminder(task.id);
+    }
     await repository.clearLocalData();
     await authService.logout();
     authSession = null;
     onboardingComplete = false;
     onboardingStep = 0;
     language = LanguagePreference.system;
+    accentTheme = AppAccentTheme.mint;
     unitSystem = UnitSystem.imperial;
     liquidMetric = false;
+    waterGoalMl = 2000;
+    stepGoal = 8000;
+    quickWaterMl = 250;
+    calorieGoal = null;
+    targetWeightKg = null;
+    healthStepStatus = HealthReadStatus.permissionRequired;
     await repository.ensureDefaultPlan();
+    await repository.ensureDefaultDailyTasks();
     notifyListeners();
   }
 
@@ -313,5 +410,13 @@ class AppController extends ChangeNotifier {
     'zh' => LanguagePreference.zh,
     'en' => LanguagePreference.en,
     _ => LanguagePreference.system,
+  };
+
+  AppAccentTheme _accentThemeFrom(String? value) => switch (value) {
+    'ocean' => AppAccentTheme.ocean,
+    'violet' => AppAccentTheme.violet,
+    'coral' => AppAccentTheme.coral,
+    'graphite' => AppAccentTheme.graphite,
+    _ => AppAccentTheme.mint,
   };
 }

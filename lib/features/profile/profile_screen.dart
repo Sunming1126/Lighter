@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,21 +22,25 @@ class ProfileScreen extends ConsumerWidget {
     final history =
         ref.watch(sessionHistoryProvider).valueOrNull ??
         const <FastingSession>[];
+    final accent = LighterAccentPalette.of(context);
     return SafeArea(
       bottom: false,
       child: Column(
         children: [
-          ScreenHeader(title: s.me),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(22, 4, 22, 32),
+              padding: const EdgeInsets.fromLTRB(
+                22,
+                20,
+                22,
+                kFloatingNavigationClearance,
+              ),
               children: [
                 _ProfileHeader(
                   app: app,
                   plan: plan,
-                  fastCount: history
-                      .where((e) => e.endedAtUtcMs != null)
-                      .length,
+                  sessions: history,
+                  onAccountTap: () => _showAccount(context, ref),
                 ),
                 const SizedBox(height: 24),
                 _sectionLabel(context, s.planAndPreferences),
@@ -43,6 +49,8 @@ class ProfileScreen extends ConsumerWidget {
                     children: [
                       SettingsRow(
                         icon: CupertinoIcons.calendar,
+                        iconColor: accent.primary,
+                        iconBackground: accent.tint,
                         label: s.currentPlan,
                         value:
                             '${(plan?.fastMinutes ?? 720) ~/ 60}:${(1440 - (plan?.fastMinutes ?? 720)) ~/ 60}',
@@ -50,13 +58,29 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       const Divider(height: 1, indent: 62),
                       SettingsRow(
+                        icon: CupertinoIcons.paintbrush,
+                        iconColor: accent.primary,
+                        iconBackground: accent.tint,
+                        label:
+                            Localizations.localeOf(context).languageCode == 'zh'
+                            ? '系统风格'
+                            : 'App theme',
+                        value: _themeValue(context, app.accentTheme),
+                        onTap: () => _showTheme(context),
+                      ),
+                      const Divider(height: 1, indent: 62),
+                      SettingsRow(
                         icon: CupertinoIcons.bell,
+                        iconColor: AppColors.steps,
+                        iconBackground: AppColors.stepsTint,
                         label: s.reminderSettings,
                         onTap: () => _showReminders(context, ref),
                       ),
                       const Divider(height: 1, indent: 62),
                       SettingsRow(
                         icon: CupertinoIcons.globe,
+                        iconColor: AppColors.water,
+                        iconBackground: AppColors.waterTint,
                         label: s.language,
                         value: _languageValue(context, app.language),
                         onTap: () => _showLanguage(context, ref),
@@ -64,6 +88,8 @@ class ProfileScreen extends ConsumerWidget {
                       const Divider(height: 1, indent: 62),
                       SettingsRow(
                         icon: CupertinoIcons.compass,
+                        iconColor: AppColors.purple,
+                        iconBackground: AppColors.purpleTint,
                         label: s.units,
                         value: app.unitSystem == UnitSystem.metric
                             ? (Localizations.localeOf(context).languageCode ==
@@ -82,7 +108,11 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 22),
                 _sectionLabel(context, 'Lighter Plus'),
                 LighterCard(
-                  color: const Color(0xFFF1F2F8),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFFFFF0D8), Color(0xFFFFE9EE)],
+                  ),
                   onTap: () =>
                       showMessage(context, 'Lighter Plus · ${s.comingSoon}'),
                   child: Row(
@@ -132,6 +162,8 @@ class ProfileScreen extends ConsumerWidget {
                     children: [
                       SettingsRow(
                         icon: CupertinoIcons.person,
+                        iconColor: AppColors.weight,
+                        iconBackground: AppColors.weightTint,
                         label: s.accountAndSync,
                         value:
                             app.authSession?.email ??
@@ -144,12 +176,16 @@ class ProfileScreen extends ConsumerWidget {
                       const Divider(height: 1, indent: 62),
                       SettingsRow(
                         icon: CupertinoIcons.shield,
+                        iconColor: AppColors.water,
+                        iconBackground: AppColors.waterTint,
                         label: s.learnAndSafety,
                         onTap: () => _showSafety(context),
                       ),
                       const Divider(height: 1, indent: 62),
                       SettingsRow(
                         icon: CupertinoIcons.lock,
+                        iconColor: AppColors.purple,
+                        iconBackground: AppColors.purpleTint,
                         label: s.privacy,
                         onTap: () => _showPrivacy(context),
                       ),
@@ -168,6 +204,8 @@ class ProfileScreen extends ConsumerWidget {
                     children: [
                       SettingsRow(
                         icon: CupertinoIcons.arrow_down_doc,
+                        iconColor: AppColors.water,
+                        iconBackground: AppColors.waterTint,
                         label: s.exportData,
                         onTap: () => _export(context, ref),
                       ),
@@ -275,6 +313,17 @@ class ProfileScreen extends ConsumerWidget {
         LanguagePreference.en => 'English',
       };
 
+  String _themeValue(BuildContext context, AppAccentTheme value) {
+    final zh = Localizations.localeOf(context).languageCode == 'zh';
+    return switch (value) {
+      AppAccentTheme.mint => zh ? '薄荷绿' : 'Mint',
+      AppAccentTheme.ocean => zh ? '海洋蓝' : 'Ocean',
+      AppAccentTheme.violet => zh ? '紫罗兰' : 'Violet',
+      AppAccentTheme.coral => zh ? '珊瑚橙' : 'Coral',
+      AppAccentTheme.graphite => zh ? '石墨蓝' : 'Graphite',
+    };
+  }
+
   Future<void> _showPlan(
     BuildContext context,
     WidgetRef ref,
@@ -284,6 +333,8 @@ class ProfileScreen extends ConsumerWidget {
       showLighterSheet<void>(context, const _ReminderSettingsSheet());
   Future<void> _showLanguage(BuildContext context, WidgetRef ref) async =>
       showLighterSheet<void>(context, const _LanguageSheet());
+  Future<void> _showTheme(BuildContext context) async =>
+      showLighterSheet<void>(context, const _ThemeSheet());
   Future<void> _showUnits(BuildContext context, WidgetRef ref) async =>
       showLighterSheet<void>(context, const _UnitSheet());
 
@@ -372,99 +423,207 @@ class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({
     required this.app,
     required this.plan,
-    required this.fastCount,
+    required this.sessions,
+    required this.onAccountTap,
   });
   final AppController app;
   final FastingPlan? plan;
-  final int fastCount;
+  final List<FastingSession> sessions;
+  final VoidCallback onAccountTap;
 
   @override
-  Widget build(BuildContext context) => LighterCard(
-    child: Column(
+  Widget build(BuildContext context) {
+    final ended = sessions.where((item) => item.endedAtUtcMs != null).toList();
+    final totalMinutes = ended.fold<int>(
+      0,
+      (sum, item) => sum + (item.endedAtUtcMs! - item.startedAtUtcMs) ~/ 60000,
+    );
+    final longestMinutes = ended.fold<int>(
+      0,
+      (value, item) =>
+          math.max(value, (item.endedAtUtcMs! - item.startedAtUtcMs) ~/ 60000),
+    );
+    final zh = Localizations.localeOf(context).languageCode == 'zh';
+    final accent = LighterAccentPalette.of(context);
+    final fastingDays = ended
+        .map(
+          (item) => localDateKey(
+            DateTime.fromMillisecondsSinceEpoch(
+              item.startedAtUtcMs,
+              isUtc: true,
+            ).toLocal(),
+          ),
+        )
+        .toSet()
+        .length;
+    return Column(
       children: [
-        Row(
-          children: [
-            CircleAvatar(
-              radius: 27,
-              backgroundColor: AppColors.accentTint,
-              child: Text(
-                (app.authSession?.displayName ?? 'L').characters.first
-                    .toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.accent,
-                ),
-              ),
-            ),
-            const SizedBox(width: 13),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    app.authSession?.displayName ??
-                        (Localizations.localeOf(context).languageCode == 'zh'
-                            ? 'Lighter 用户'
-                            : 'Lighter user'),
-                    style: Theme.of(context).textTheme.titleLarge,
+        InkWell(
+          onTap: onAccountTap,
+          borderRadius: BorderRadius.circular(22),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Row(
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [accent.tint, AppColors.purpleTint],
+                    ),
                   ),
-                  Text(
-                    app.authSession == null
-                        ? (Localizations.localeOf(context).languageCode == 'zh'
-                              ? '游客模式'
-                              : 'Guest mode')
-                        : app.authSession!.email,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                  alignment: Alignment.center,
+                  child: Text(
+                    (app.authSession?.displayName ?? 'L').characters.first
+                        .toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 25,
+                      fontWeight: FontWeight.w700,
+                      color: accent.pressed,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              app.authSession?.displayName ??
+                                  (zh ? 'Lighter 用户' : 'Lighter user'),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                          ),
+                          const SizedBox(width: 7),
+                          Icon(
+                            CupertinoIcons.pencil,
+                            size: 16,
+                            color: accent.primary,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        app.authSession == null
+                            ? (zh ? '游客模式 · 点击登录' : 'Guest · Tap to sign in')
+                            : app.authSession!.email,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(CupertinoIcons.gear, color: AppColors.strong, size: 24),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        LighterCard(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: _stat(
+                      '$fastingDays',
+                      zh ? '断食天数' : 'Fasting days',
+                      CupertinoIcons.calendar,
+                      AppColors.water,
+                      AppColors.waterTint,
+                    ),
+                  ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: _stat(
+                      '${(plan?.fastMinutes ?? 720) ~/ 60}h',
+                      zh ? '当日目标' : 'Daily goal',
+                      CupertinoIcons.scope,
+                      accent.primary,
+                      accent.tint,
+                    ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 18),
-        Row(
-          children: [
-            Expanded(
-              child: _stat(
-                '$fastCount',
-                Localizations.localeOf(context).languageCode == 'zh'
-                    ? '断食次数'
-                    : 'Fasts',
+              const SizedBox(height: 22),
+              Row(
+                children: [
+                  Expanded(
+                    child: _stat(
+                      '${totalMinutes ~/ 60}h',
+                      zh ? '累计时长' : 'Total time',
+                      CupertinoIcons.timer,
+                      AppColors.calories,
+                      AppColors.caloriesTint,
+                    ),
+                  ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    child: _stat(
+                      '${longestMinutes ~/ 60}h',
+                      zh ? '最长断食' : 'Longest fast',
+                      CupertinoIcons.flame_fill,
+                      AppColors.steps,
+                      AppColors.stepsTint,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            Expanded(
-              child: _stat(
-                '${(plan?.fastMinutes ?? 720) ~/ 60}h',
-                Localizations.localeOf(context).languageCode == 'zh'
-                    ? '当前目标'
-                    : 'Current goal',
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
-    ),
-  );
+    );
+  }
 
-  Widget _stat(String value, String label) => Container(
-    padding: const EdgeInsets.symmetric(vertical: 11),
-    decoration: BoxDecoration(
-      color: AppColors.surface2,
-      borderRadius: BorderRadius.circular(14),
-    ),
-    child: Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+  Widget _stat(
+    String value,
+    String label,
+    IconData icon,
+    Color accent,
+    Color tint,
+  ) => Row(
+    children: [
+      Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(color: tint, shape: BoxShape.circle),
+        child: Icon(icon, size: 18, color: accent),
+      ),
+      const SizedBox(width: 10),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, color: AppColors.faint),
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: AppColors.strong,
+              ),
+            ),
+          ],
         ),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 11, color: AppColors.faint),
-        ),
-      ],
-    ),
+      ),
+    ],
   );
 }
 
@@ -684,6 +843,125 @@ class _LanguageSheet extends ConsumerWidget {
       ],
     );
   }
+}
+
+class _ThemeSheet extends ConsumerWidget {
+  const _ThemeSheet();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(appControllerProvider).accentTheme;
+    final zh = Localizations.localeOf(context).languageCode == 'zh';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          zh ? '系统风格' : 'App theme',
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          zh ? '选择你喜欢的全局强调色' : 'Choose an accent that feels like you',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 18),
+        for (final option in AppAccentTheme.values) ...[
+          _ThemeOption(
+            option: option,
+            selected: current == option,
+            label: _label(option, zh),
+            onTap: () => ref.read(appControllerProvider).setAccentTheme(option),
+          ),
+          if (option != AppAccentTheme.values.last) const SizedBox(height: 10),
+        ],
+        const SizedBox(height: 18),
+        OutlinedButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(AppLocalizations.of(context).close),
+        ),
+      ],
+    );
+  }
+
+  String _label(AppAccentTheme value, bool zh) => switch (value) {
+    AppAccentTheme.mint => zh ? '薄荷绿' : 'Mint',
+    AppAccentTheme.ocean => zh ? '海洋蓝' : 'Ocean',
+    AppAccentTheme.violet => zh ? '紫罗兰' : 'Violet',
+    AppAccentTheme.coral => zh ? '珊瑚橙' : 'Coral',
+    AppAccentTheme.graphite => zh ? '石墨蓝' : 'Graphite',
+  };
+}
+
+class _ThemeOption extends StatelessWidget {
+  const _ThemeOption({
+    required this.option,
+    required this.selected,
+    required this.label,
+    required this.onTap,
+  });
+
+  final AppAccentTheme option;
+  final bool selected;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = option.palette;
+    return LighterCard(
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+      borderColor: selected ? palette.primary : AppColors.border,
+      child: Row(
+        children: [
+          SizedBox(
+            width: 68,
+            height: 28,
+            child: Stack(
+              children: [
+                _swatch(palette.soft, 0),
+                _swatch(palette.tint, 20),
+                _swatch(palette.primary, 40),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(label, style: Theme.of(context).textTheme.titleMedium),
+          ),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              color: selected ? palette.primary : AppColors.surface2,
+              shape: BoxShape.circle,
+            ),
+            child: selected
+                ? const Icon(
+                    CupertinoIcons.check_mark,
+                    color: Colors.white,
+                    size: 15,
+                  )
+                : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _swatch(Color color, double left) => Positioned(
+    left: left,
+    child: Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2),
+      ),
+    ),
+  );
 }
 
 class _UnitSheet extends ConsumerStatefulWidget {

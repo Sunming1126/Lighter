@@ -158,11 +158,395 @@ abstract class AppLocalizations {
   /// **'Progress'**
   String get progress;
 
+  /// No description provided for @learn.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn'**
+  String get learn;
+
   /// No description provided for @me.
   ///
   /// In en, this message translates to:
   /// **'Me'**
   String get me;
+
+  /// No description provided for @learningSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Understand fasting, and understand your body'**
+  String get learningSubtitle;
+
+  /// No description provided for @learningBeginHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Start here'**
+  String get learningBeginHere;
+
+  /// No description provided for @learningBeginnerGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'Beginner guide'**
+  String get learningBeginnerGuide;
+
+  /// No description provided for @learningBenefitsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Benefits of fasting'**
+  String get learningBenefitsSection;
+
+  /// No description provided for @learningWomenSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Women and weight management'**
+  String get learningWomenSection;
+
+  /// No description provided for @learningFaqSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Common questions'**
+  String get learningFaqSection;
+
+  /// No description provided for @learningAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'What to keep in mind'**
+  String get learningAttention;
+
+  /// No description provided for @learningSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical sources'**
+  String get learningSources;
+
+  /// No description provided for @learningSourceFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a source to copy its link. Educational information only; not diagnosis or medical advice.'**
+  String get learningSourceFootnote;
+
+  /// No description provided for @learningCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Source link copied'**
+  String get learningCopied;
+
+  /// No description provided for @learningSourceNia.
+  ///
+  /// In en, this message translates to:
+  /// **'National Institute on Aging · Fasting research review'**
+  String get learningSourceNia;
+
+  /// No description provided for @learningSourceReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Systematic review and network meta-analysis of randomized trials'**
+  String get learningSourceReview;
+
+  /// No description provided for @learningSourceWomenHormones.
+  ///
+  /// In en, this message translates to:
+  /// **'Randomized trial of fasting and sex hormones'**
+  String get learningSourceWomenHormones;
+
+  /// No description provided for @learningSourceTreat.
+  ///
+  /// In en, this message translates to:
+  /// **'TREAT randomized trial of time-restricted eating'**
+  String get learningSourceTreat;
+
+  /// No description provided for @learningSourceHopkins.
+  ///
+  /// In en, this message translates to:
+  /// **'Johns Hopkins Medicine · Fasting safety guide'**
+  String get learningSourceHopkins;
+
+  /// No description provided for @learningSourceAda.
+  ///
+  /// In en, this message translates to:
+  /// **'American Diabetes Association · Hypoglycemia risk'**
+  String get learningSourceAda;
+
+  /// No description provided for @learningTopicSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'Start safely'**
+  String get learningTopicSafety;
+
+  /// No description provided for @learningTopicBeginner.
+  ///
+  /// In en, this message translates to:
+  /// **'Beginners'**
+  String get learningTopicBeginner;
+
+  /// No description provided for @learningTopicBenefits.
+  ///
+  /// In en, this message translates to:
+  /// **'Benefits'**
+  String get learningTopicBenefits;
+
+  /// No description provided for @learningTopicWomen.
+  ///
+  /// In en, this message translates to:
+  /// **'For women'**
+  String get learningTopicWomen;
+
+  /// No description provided for @learningTopicFaq.
+  ///
+  /// In en, this message translates to:
+  /// **'Questions'**
+  String get learningTopicFaq;
+
+  /// No description provided for @learningHeroSafetyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How can I start fasting safely?'**
+  String get learningHeroSafetyTitle;
+
+  /// No description provided for @learningHeroSafetySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Begin gently with 12:12 and first check whether fasting suits you'**
+  String get learningHeroSafetySummary;
+
+  /// No description provided for @learningHeroBeginnerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your first fast does not need to be longer'**
+  String get learningHeroBeginnerTitle;
+
+  /// No description provided for @learningHeroBeginnerSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a steady eating rhythm and give life and body time to adapt'**
+  String get learningHeroBeginnerSummary;
+
+  /// No description provided for @learningHeroBenefitsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What benefits might fasting offer?'**
+  String get learningHeroBenefitsTitle;
+
+  /// No description provided for @learningHeroBenefitsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Understand the possible gains and the limits of current evidence'**
+  String get learningHeroBenefitsSummary;
+
+  /// No description provided for @learningHeroWomenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'For women, body signals matter more'**
+  String get learningHeroWomenTitle;
+
+  /// No description provided for @learningHeroWomenSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition, life stage and wellbeing matter more than pushing through'**
+  String get learningHeroWomenSummary;
+
+  /// No description provided for @learningHeroFaqTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I drink coffee or exercise while fasting?'**
+  String get learningHeroFaqTitle;
+
+  /// No description provided for @learningHeroFaqSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear answers to the questions beginners ask most often'**
+  String get learningHeroFaqSummary;
+
+  /// No description provided for @learningArticleWhatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What is intermittent fasting?'**
+  String get learningArticleWhatTitle;
+
+  /// No description provided for @learningArticleWhatSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'It changes when you eat; it is not starvation or skipping nutrition.'**
+  String get learningArticleWhatSummary;
+
+  /// No description provided for @learningArticleWhatBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Intermittent fasting describes eating patterns that regularly alternate between eating and fasting periods. Common approaches include daily time-restricted eating, 5:2, and alternate-day fasting. Lighter starts with the gentler daily approach.\n\nFasting focuses on when you eat, but what you eat still matters. Your eating window should still provide enough protein, vegetables, fluids and overall energy. It is not a reason to compensate with one very large meal.'**
+  String get learningArticleWhatBody;
+
+  /// No description provided for @learningArticleWhatSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting is not an endurance contest. Stop and eat if you develop persistent dizziness, palpitations, nausea, unusual weakness or a clear drop in concentration.'**
+  String get learningArticleWhatSafety;
+
+  /// No description provided for @learningArticleStartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with 12:12'**
+  String get learningArticleStartTitle;
+
+  /// No description provided for @learningArticleStartSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Including the hours after dinner makes this the easiest starting point.'**
+  String get learningArticleStartSummary;
+
+  /// No description provided for @learningArticleStartBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A 12:12 schedule means consuming no calories for 12 continuous hours and eating normally during the other 12. For example, finish dinner at 8 p.m. and eat breakfast at 8 a.m. Sleep already covers most of the fasting period, so you do not need to skip a whole meal.\n\nKeep the rhythm steady for one or two weeks before changing it. Use sleep, work, training and hunger as your guide. A gentle pattern you can sustain is more useful than completing one unusually long fast.'**
+  String get learningArticleStartBody;
+
+  /// No description provided for @learningArticleStartSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not compensate for a missed target by extending the next fast. Ending early when you feel unwell is still a valid record.'**
+  String get learningArticleStartSafety;
+
+  /// No description provided for @learningArticleBenefitsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What benefits might fasting offer?'**
+  String get learningArticleBenefitsTitle;
+
+  /// No description provided for @learningArticleBenefitsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Some people may find it easier to manage eating times, weight and certain metabolic markers.'**
+  String get learningArticleBenefitsSummary;
+
+  /// No description provided for @learningArticleBenefitsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Some clinical studies suggest intermittent fasting may help adults with overweight or obesity lose weight and improve fasting glucose, blood pressure or other metabolic markers. Study plans and participants vary widely, so results are not consistent.\n\nIts practical benefit may come from less late-night eating, a shorter eating window and lower total energy intake rather than a magic switch. Short-term studies cannot yet prove that fasting extends human life or prevents every chronic disease.'**
+  String get learningArticleBenefitsBody;
+
+  /// No description provided for @learningArticleBenefitsSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'Treat fasting as an optional routine, not a disease treatment. Discuss it with a clinician first if you have a chronic condition or take medication.'**
+  String get learningArticleBenefitsSafety;
+
+  /// No description provided for @learningArticleComparisonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fasting may not beat ordinary calorie control'**
+  String get learningArticleComparisonTitle;
+
+  /// No description provided for @learningArticleComparisonSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat loss depends more on total energy, nutrition quality and long-term adherence.'**
+  String get learningArticleComparisonSummary;
+
+  /// No description provided for @learningArticleComparisonBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Randomized trials and systematic reviews show that intermittent fasting can produce some weight loss, but its average effect is not consistently greater than reducing calories each day. Some people find tracking time simpler; others find regular meals easier to sustain.\n\nSleep, activity, stress, medication and starting weight also affect progress. Using short-term scale changes as the only test of whether fasting works can create unnecessary anxiety.'**
+  String get learningArticleComparisonBody;
+
+  /// No description provided for @learningArticleComparisonSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'Avoid severe restriction during the eating window. Rapid weight loss may increase the risk of muscle loss, gallstones and nutrient deficiencies.'**
+  String get learningArticleComparisonSafety;
+
+  /// No description provided for @learningArticleWomenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What should women consider for weight loss?'**
+  String get learningArticleWomenTitle;
+
+  /// No description provided for @learningArticleWomenSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'No fasting length suits every woman, and cycle-based fasting rules are not required.'**
+  String get learningArticleWomenSummary;
+
+  /// No description provided for @learningArticleWomenBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Current research suggests time-restricted eating may help some women with overweight or obesity lose weight, but it has not shown a consistent advantage over other sustainable calorie-control approaches. Evidence on reproductive hormones, menstruation and different life stages remains limited.\n\nA practical approach is to start with a short window and observe your cycle, sleep, mood, training and hunger. Adequate protein, iron, calcium and total energy matter more than pursuing a longer fast.'**
+  String get learningArticleWomenBody;
+
+  /// No description provided for @learningArticleWomenSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not start fasting on your own if your periods become clearly irregular, or while trying to conceive, pregnant or breastfeeding. Stop and seek advice if changes persist.'**
+  String get learningArticleWomenSafety;
+
+  /// No description provided for @learningArticleWhoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who should not fast without guidance?'**
+  String get learningArticleWhoTitle;
+
+  /// No description provided for @learningArticleWhoSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Certain life stages, eating-disorder history and medical conditions increase the risk.'**
+  String get learningArticleWhoSummary;
+
+  /// No description provided for @learningArticleWhoBody.
+  ///
+  /// In en, this message translates to:
+  /// **'People under 18, anyone pregnant or breastfeeding, people with a history of eating disorders, those who are underweight, and people with type 1 diabetes should not try intermittent fasting without professional guidance.\n\nChanging meal times can cause hypoglycemia or interfere with treatment when using insulin, sulfonylureas or medicines that must be taken with food. Older adults, people with chronic illness, or those recovering from illness or surgery should also ask a clinician first.'**
+  String get learningArticleWhoBody;
+
+  /// No description provided for @learningArticleWhoSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'If you are unsure whether you are at higher risk, keep regular meals and ask a clinician. Do not use an app prompt as a medical decision.'**
+  String get learningArticleWhoSafety;
+
+  /// No description provided for @learningArticleCoffeeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I drink water or coffee while fasting?'**
+  String get learningArticleCoffeeTitle;
+
+  /// No description provided for @learningArticleCoffeeSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Water is usually fine; unsweetened caffeinated drinks depend on your tolerance and goal.'**
+  String get learningArticleCoffeeSummary;
+
+  /// No description provided for @learningArticleCoffeeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay hydrated while fasting. Water, unsweetened tea and black coffee contain little or no energy, but coffee is never required to complete a fast.\n\nCoffee on an empty stomach can cause stomach discomfort, palpitations, anxiety or worse sleep for some people. Sugar, cream or caloric drinks end a strict fast, but one choice does not erase your long-term habits.'**
+  String get learningArticleCoffeeBody;
+
+  /// No description provided for @learningArticleCoffeeSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'If you develop shaking, palpitations, reflux or clear discomfort, do not use coffee to suppress hunger. Stop drinking it and end the fast if needed.'**
+  String get learningArticleCoffeeSafety;
+
+  /// No description provided for @learningArticleExerciseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I exercise while fasting?'**
+  String get learningArticleExerciseTitle;
+
+  /// No description provided for @learningArticleExerciseSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Low-to-moderate activity is often easier to adapt to; plan intense training carefully.'**
+  String get learningArticleExerciseSummary;
+
+  /// No description provided for @learningArticleExerciseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Healthy adults who already tolerate regular fasting can often walk, cycle easily or do routine strength work while fasted. Comfort and performance vary, so lower the intensity on your first attempts and keep water and food available.\n\nLong endurance sessions, high-intensity intervals and heavy lifting rely more on fuel and hydration. Scheduling important training near the eating window often makes recovery and protein intake easier.'**
+  String get learningArticleExerciseBody;
+
+  /// No description provided for @learningArticleExerciseSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop immediately and refuel if exercise causes dizziness, visual changes, chills, weakness or palpitations. Do not push on simply to complete a timer.'**
+  String get learningArticleExerciseSafety;
 
   /// No description provided for @onboardingWelcome.
   ///

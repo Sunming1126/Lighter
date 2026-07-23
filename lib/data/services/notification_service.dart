@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -124,6 +125,75 @@ class NotificationService {
   }
 
   Future<void> cancelDailyStartReminder() => _plugin.cancel(id: _dailyStartId);
+
+  Future<void> scheduleTaskReminder({
+    required String taskId,
+    required String title,
+    required int weekdaysMask,
+    required int minuteOfDay,
+  }) async {
+    if (!_ready) await initialize();
+    await cancelTaskReminder(taskId);
+    final now = tz.TZDateTime.now(tz.local);
+    for (
+      var weekday = DateTime.monday;
+      weekday <= DateTime.sunday;
+      weekday += 1
+    ) {
+      if (weekdaysMask & (1 << (weekday - 1)) == 0) continue;
+      var daysAhead = (weekday - now.weekday + 7) % 7;
+      var date = now.add(Duration(days: daysAhead));
+      var scheduled = tz.TZDateTime(
+        tz.local,
+        date.year,
+        date.month,
+        date.day,
+        minuteOfDay ~/ 60,
+        minuteOfDay % 60,
+      );
+      if (!scheduled.isAfter(now)) {
+        daysAhead += 7;
+        date = now.add(Duration(days: daysAhead));
+        scheduled = tz.TZDateTime(
+          tz.local,
+          date.year,
+          date.month,
+          date.day,
+          minuteOfDay ~/ 60,
+          minuteOfDay % 60,
+        );
+      }
+      await _plugin.zonedSchedule(
+        id: _taskNotificationId(taskId, weekday),
+        title: 'Lighter · $title',
+        body: 'A small step is enough. Complete it at your own pace.',
+        scheduledDate: scheduled,
+        notificationDetails: _details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+        payload: 'custom-task:$taskId',
+      );
+    }
+  }
+
+  Future<void> cancelTaskReminder(String taskId) async {
+    for (
+      var weekday = DateTime.monday;
+      weekday <= DateTime.sunday;
+      weekday += 1
+    ) {
+      await _plugin.cancel(id: _taskNotificationId(taskId, weekday));
+    }
+  }
+
+  int _taskNotificationId(String taskId, int weekday) {
+    var hash = 0x811C9DC5;
+    for (final byte in utf8.encode(taskId)) {
+      hash ^= byte;
+      hash = (hash * 0x01000193) & 0xFFFFFFFF;
+    }
+    return 0x20000000 | (hash & 0x0FFFFFF8) | (weekday - 1);
+  }
 
   Future<void> cancelFastNotifications() async {
     await _plugin.cancel(id: _fastEndId);

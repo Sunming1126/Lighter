@@ -38,6 +38,54 @@ abstract interface class SyncCoordinator {
   Future<void> synchronize();
 }
 
+enum HealthReadStatus { ready, permissionRequired, unavailable, error }
+
+class StepReadResult {
+  const StepReadResult({
+    required this.status,
+    this.steps,
+    this.synchronizedAt,
+    this.debugMessage,
+  });
+
+  final HealthReadStatus status;
+  final int? steps;
+  final DateTime? synchronizedAt;
+  final String? debugMessage;
+}
+
+abstract interface class HealthDataSource {
+  Future<StepReadResult> readTodaySteps({required bool requestAuthorization});
+}
+
+enum TaskGoalType { check, count, duration, distance }
+
+enum DailyTaskKind { water, calories, weight, steps, custom }
+
+DailyTaskKind dailyTaskKindFromWire(String value) =>
+    DailyTaskKind.values.where((kind) => kind.name == value).firstOrNull ??
+    DailyTaskKind.custom;
+
+TaskGoalType taskGoalTypeFromWire(String value) =>
+    TaskGoalType.values.where((type) => type.name == value).firstOrNull ??
+    TaskGoalType.check;
+
+class TaskSchedule {
+  const TaskSchedule._();
+
+  static const everyDay = 0x7F;
+  static const workdays = 0x1F;
+  static const weekend = 0x60;
+
+  static bool includesWeekday(int mask, int weekday) {
+    if (weekday < DateTime.monday || weekday > DateTime.sunday) return false;
+    return mask & (1 << (weekday - 1)) != 0;
+  }
+
+  static int toggleWeekday(int mask, int weekday) =>
+      mask ^ (1 << (weekday - 1));
+}
+
 class MockRemoteDataSource implements RemoteDataSource {
   const MockRemoteDataSource();
 

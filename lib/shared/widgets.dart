@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../core/theme/app_theme.dart';
 
@@ -67,21 +68,71 @@ class LighterCard extends StatelessWidget {
     required this.child,
     this.padding = const EdgeInsets.all(18),
     this.color,
+    this.gradient,
+    this.borderColor,
     this.onTap,
   });
   final Widget child;
   final EdgeInsets padding;
   final Color? color;
+  final Gradient? gradient;
+  final Color? borderColor;
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) => Card(
-    color: color,
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Padding(padding: padding, child: child),
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: gradient == null ? (color ?? AppColors.surface) : null,
+      gradient: gradient,
+      borderRadius: BorderRadius.circular(24),
+      border: Border.all(
+        color: borderColor ?? Colors.white.withValues(alpha: .7),
+      ),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x0A173A5E),
+          blurRadius: 18,
+          offset: Offset(0, 7),
+        ),
+      ],
     ),
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(padding: padding, child: child),
+      ),
+    ),
+  );
+}
+
+class LighterGlassCard extends StatelessWidget {
+  const LighterGlassCard({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(20),
+  });
+
+  final Widget child;
+  final EdgeInsets padding;
+
+  @override
+  Widget build(BuildContext context) => GlassCard(
+    useOwnLayer: true,
+    quality: GlassQuality.standard,
+    padding: padding,
+    settings: LiquidGlassSettings(
+      glassColor: Colors.white.withValues(alpha: .28),
+      blur: 10,
+      thickness: 20,
+      saturation: 1.12,
+      chromaticAberration: .003,
+      lightIntensity: .56,
+      ambientStrength: .12,
+      shadowElevation: 1.5,
+    ),
+    child: child,
   );
 }
 
@@ -92,12 +143,16 @@ class SettingsRow extends StatelessWidget {
     required this.label,
     this.value,
     this.danger = false,
+    this.iconColor,
+    this.iconBackground,
     this.onTap,
   });
   final IconData icon;
   final String label;
   final String? value;
   final bool danger;
+  final Color? iconColor;
+  final Color? iconBackground;
   final VoidCallback? onTap;
 
   @override
@@ -111,13 +166,15 @@ class SettingsRow extends StatelessWidget {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: AppColors.surface2,
+              color: iconBackground ?? AppColors.surface2,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               icon,
               size: 18,
-              color: danger ? AppColors.danger : AppColors.foreground,
+              color: danger
+                  ? AppColors.danger
+                  : (iconColor ?? AppColors.foreground),
             ),
           ),
           const SizedBox(width: 12),

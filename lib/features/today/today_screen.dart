@@ -11,6 +11,7 @@ import '../../core/theme/app_theme.dart';
 import '../../data/database/app_database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../shared/widgets.dart';
+import 'custom_tasks.dart';
 
 class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
@@ -182,51 +183,15 @@ class _IdleView extends ConsumerWidget {
     final s = AppLocalizations.of(context);
     final plan = ref.watch(activePlanProvider).valueOrNull;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(22, 18, 22, 28),
+      padding: const EdgeInsets.fromLTRB(
+        22,
+        18,
+        22,
+        kFloatingNavigationClearance,
+      ),
       children: [
-        const SizedBox(height: 38),
-        Center(
-          child: Container(
-            width: 112,
-            height: 112,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.accentTint,
-              border: Border.all(color: AppColors.borderStrong),
-              boxShadow: const [
-                BoxShadow(
-                  color: AppColors.accentTint,
-                  spreadRadius: 6,
-                  blurRadius: 0,
-                ),
-              ],
-            ),
-            child: const Icon(
-              CupertinoIcons.clock,
-              size: 34,
-              color: AppColors.accent,
-            ),
-          ),
-        ),
-        const SizedBox(height: 28),
-        Text(
-          s.idleTitle,
-          style: Theme.of(context).textTheme.headlineLarge,
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 10),
-        Text(
-          s.idleBody,
-          style: Theme.of(context).textTheme.bodyLarge,
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 24),
-        FilledButton.icon(
-          onPressed: onStart,
-          icon: const Icon(CupertinoIcons.play_fill, size: 18),
-          label: Text(s.startFast),
-        ),
-        const SizedBox(height: 30),
+        _IdleHero(plan: plan, onStart: onStart),
+        const SizedBox(height: 14),
         SectionTitle(
           s.currentPlan,
           action: TextButton.icon(
@@ -239,7 +204,7 @@ class _IdleView extends ConsumerWidget {
             ),
           ),
         ),
-        LighterCard(
+        LighterGlassCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -337,6 +302,208 @@ class _IdleView extends ConsumerWidget {
   }
 }
 
+class _IdleHero extends StatelessWidget {
+  const _IdleHero({required this.plan, required this.onStart});
+
+  final FastingPlan? plan;
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final zh = Localizations.localeOf(context).languageCode == 'zh';
+    final minutes = plan?.fastMinutes ?? 720;
+    final startMinute = plan?.startMinuteOfDay ?? 1200;
+    final endMinute = (startMinute + minutes) % 1440;
+    final endsTomorrow = startMinute + minutes >= 1440;
+    String time(int value) =>
+        '${(value ~/ 60).toString().padLeft(2, '0')}:${(value % 60).toString().padLeft(2, '0')}';
+    return Column(
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final ringSize = math.min(constraints.maxWidth, 310.0);
+            return SizedBox.square(
+              dimension: ringSize,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned.fill(
+                    child: ExcludeSemantics(
+                      child: CustomPaint(
+                        painter: _OpenRingPainter(
+                          color: LighterAccentPalette.of(context).soft,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      ringSize * .13,
+                      ringSize * .105,
+                      ringSize * .13,
+                      ringSize * .11,
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          zh ? '进食阶段' : 'Eating window',
+                          style: const TextStyle(
+                            color: AppColors.strong,
+                            fontSize: 21,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 19),
+                        Text(
+                          zh ? '你的断食开始于' : 'Your fast starts at',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.foreground),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          time(startMinute),
+                          style: const TextStyle(
+                            fontSize: 44,
+                            height: 1.05,
+                            letterSpacing: -1.5,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.strong,
+                          ),
+                        ),
+                        const Spacer(),
+                        SizedBox(
+                          width: 210,
+                          height: 46,
+                          child: FilledButton(
+                            onPressed: onStart,
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 22,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(17),
+                              ),
+                              textStyle: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            child: Text(AppLocalizations.of(context).startFast),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        SizedBox(
+          height: 52,
+          child: Transform.translate(
+            offset: const Offset(0, -10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _PlanTimeLabel(
+                    label: zh ? '开始时间' : 'Start time',
+                    value: zh
+                        ? '今天，${time(startMinute)}'
+                        : 'Today, ${time(startMinute)}',
+                  ),
+                ),
+                const SizedBox(width: 18),
+                Expanded(
+                  child: _PlanTimeLabel(
+                    label: zh ? '结束时间' : 'End time',
+                    value: zh
+                        ? '${endsTomorrow ? '明天' : '今天'}，${time(endMinute)}'
+                        : '${endsTomorrow ? 'Tomorrow' : 'Today'}, ${time(endMinute)}',
+                    alignEnd: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PlanTimeLabel extends StatelessWidget {
+  const _PlanTimeLabel({
+    required this.label,
+    required this.value,
+    this.alignEnd = false,
+  });
+
+  final String label;
+  final String value;
+  final bool alignEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    final alignment = alignEnd
+        ? CrossAxisAlignment.end
+        : CrossAxisAlignment.start;
+    return Column(
+      crossAxisAlignment: alignment,
+      children: [
+        Text(
+          label,
+          textAlign: alignEnd ? TextAlign.end : TextAlign.start,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.faint),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: alignEnd ? TextAlign.end : TextAlign.start,
+          style: const TextStyle(
+            color: AppColors.strong,
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _OpenRingPainter extends CustomPainter {
+  const _OpenRingPainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final strokeWidth = math.max(17.0, size.width * .06);
+    final inset = strokeWidth / 2;
+    final paint = Paint()
+      ..color = color.withValues(alpha: .82)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+    final rect = Rect.fromLTWH(
+      inset,
+      inset,
+      size.width - strokeWidth,
+      size.height - strokeWidth,
+    );
+    canvas.drawArc(rect, math.pi * .75, math.pi * 1.5, false, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _OpenRingPainter oldDelegate) =>
+      oldDelegate.color != color;
+}
+
 class _FastingView extends ConsumerWidget {
   const _FastingView({
     super.key,
@@ -369,7 +536,12 @@ class _FastingView extends ConsumerWidget {
       math.max(0.0, elapsed.inSeconds / target.inSeconds),
     );
     return ListView(
-      padding: const EdgeInsets.fromLTRB(22, 14, 22, 28),
+      padding: const EdgeInsets.fromLTRB(
+        22,
+        14,
+        22,
+        kFloatingNavigationClearance,
+      ),
       children: [
         Center(
           child: SizedBox(
@@ -533,7 +705,12 @@ class _EndedView extends StatelessWidget {
         .clamp(0, 999)
         .round();
     return ListView(
-      padding: const EdgeInsets.fromLTRB(22, 32, 22, 28),
+      padding: const EdgeInsets.fromLTRB(
+        22,
+        32,
+        22,
+        kFloatingNavigationClearance,
+      ),
       children: [
         const Center(
           child: CircleAvatar(
@@ -1031,370 +1208,26 @@ class _TodayTrackingSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final zh = Localizations.localeOf(context).languageCode == 'zh';
-    final key = localDateKey(DateTime.now());
-    final water = ref.watch(dailyWaterProvider(key)).valueOrNull ?? const [];
-    final health = ref.watch(dailyHealthProvider(key)).valueOrNull;
-    final weights = ref.watch(weightsProvider).valueOrNull ?? const [];
-    final app = ref.watch(appControllerProvider);
-    final totalWater = water.fold<int>(
-      0,
-      (sum, item) => sum + item.milliliters,
-    );
-    final latestWeight = weights.isEmpty ? null : weights.last.kilograms;
-    final weightValue = latestWeight == null
-        ? '—'
-        : (app.unitSystem == UnitSystem.metric
-                  ? latestWeight
-                  : latestWeight * 2.2046226218)
-              .toStringAsFixed(1);
-    final waterValue = app.liquidMetric
-        ? '$totalWater ml'
-        : '${(totalWater / 236.588).toStringAsFixed(1)} cups';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionTitle(zh ? '今日记录' : 'Today’s tracking'),
-        Row(
-          children: [
-            Expanded(
-              child: _TrackingTile(
-                icon: CupertinoIcons.drop,
-                label: zh ? '饮水' : 'Water',
-                value: waterValue,
-                tint: AppColors.accentTint,
-                onTap: () =>
-                    showLighterSheet<void>(context, const _WaterLogSheet()),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _TrackingTile(
-                icon: Icons.monitor_weight_outlined,
-                label: zh ? '体重' : 'Weight',
-                value:
-                    '$weightValue ${app.unitSystem == UnitSystem.metric ? 'kg' : 'lb'}',
-                tint: const Color(0xFFF2F0F8),
-                onTap: () =>
-                    showLighterSheet<void>(context, const _TodayWeightSheet()),
-              ),
-            ),
-          ],
+        SectionTitle(
+          zh ? '每日任务' : 'Daily essentials',
+          action: TextButton.icon(
+            onPressed: () => showTaskManagerSheet(context),
+            icon: const Icon(CupertinoIcons.slider_horizontal_3, size: 15),
+            label: Text(zh ? '管理' : 'Manage'),
+          ),
         ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _TrackingTile(
-                icon: CupertinoIcons.flame,
-                label: zh ? '热量' : 'Calories',
-                value: '${health?.calories ?? 0} kcal',
-                tint: const Color(0xFFFFF3E7),
-                onTap: () => showLighterSheet<void>(
-                  context,
-                  _DailyNumberSheet(
-                    calories: true,
-                    initialValue: health?.calories ?? 0,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _TrackingTile(
-                icon: Icons.directions_walk_rounded,
-                label: zh ? '步数' : 'Steps',
-                value: NumberFormat.decimalPattern().format(health?.steps ?? 0),
-                tint: const Color(0xFFEEF4FA),
-                onTap: () => showLighterSheet<void>(
-                  context,
-                  _DailyNumberSheet(
-                    calories: false,
-                    initialValue: health?.steps ?? 0,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+        const UnifiedDailyTaskGrid(),
         const SizedBox(height: 10),
         Text(
-          zh ? '记录是为了看见趋势，不需要追求每天都完美。' : 'Track trends, not perfection.',
+          zh ? '按自己的节奏完成，今天记录一点就很好。' : 'A little progress still counts.',
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 11, color: AppColors.faint),
         ),
       ],
     );
-  }
-}
-
-class _TrackingTile extends StatelessWidget {
-  const _TrackingTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.tint,
-    required this.onTap,
-  });
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color tint;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => LighterCard(
-    onTap: onTap,
-    padding: const EdgeInsets.all(15),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: tint,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, size: 18, color: AppColors.accent),
-            ),
-            const Spacer(),
-            const Icon(
-              CupertinoIcons.add_circled,
-              size: 19,
-              color: AppColors.faint,
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12, color: AppColors.faint),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-        ),
-      ],
-    ),
-  );
-}
-
-class _WaterLogSheet extends ConsumerStatefulWidget {
-  const _WaterLogSheet();
-
-  @override
-  ConsumerState<_WaterLogSheet> createState() => _WaterLogSheetState();
-}
-
-class _WaterLogSheetState extends ConsumerState<_WaterLogSheet> {
-  int amount = 250;
-  final custom = TextEditingController();
-
-  @override
-  void dispose() {
-    custom.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final zh = Localizations.localeOf(context).languageCode == 'zh';
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          zh ? '记录饮水' : 'Log water',
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          zh ? '选择这次喝水的容量' : 'Choose the amount you drank',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        const SizedBox(height: 18),
-        SegmentedButton<int>(
-          segments: const [
-            ButtonSegment(value: 250, label: Text('250 ml')),
-            ButtonSegment(value: 350, label: Text('350 ml')),
-            ButtonSegment(value: 500, label: Text('500 ml')),
-          ],
-          selected: {amount},
-          showSelectedIcon: false,
-          onSelectionChanged: (value) => setState(() {
-            amount = value.first;
-            custom.clear();
-          }),
-        ),
-        const SizedBox(height: 14),
-        TextField(
-          controller: custom,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: zh ? '自定义容量' : 'Custom amount',
-            suffixText: 'ml',
-          ),
-          onChanged: (value) {
-            final parsed = int.tryParse(value);
-            if (parsed != null) setState(() => amount = parsed);
-          },
-        ),
-        const SizedBox(height: 20),
-        FilledButton(onPressed: _save, child: Text(zh ? '添加记录' : 'Add record')),
-      ],
-    );
-  }
-
-  Future<void> _save() async {
-    if (amount < 10 || amount > 5000) return;
-    await ref.read(repositoryProvider).addWater(milliliters: amount);
-    if (mounted) Navigator.pop(context);
-  }
-}
-
-class _TodayWeightSheet extends ConsumerStatefulWidget {
-  const _TodayWeightSheet();
-
-  @override
-  ConsumerState<_TodayWeightSheet> createState() => _TodayWeightSheetState();
-}
-
-class _TodayWeightSheetState extends ConsumerState<_TodayWeightSheet> {
-  final controller = TextEditingController();
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final zh = Localizations.localeOf(context).languageCode == 'zh';
-    final metric =
-        ref.watch(appControllerProvider).unitSystem == UnitSystem.metric;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          zh ? '记录体重' : 'Log weight',
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          zh
-              ? '同一天重复记录时，趋势会使用最新值。'
-              : 'Your latest entry will represent today in trends.',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        const SizedBox(height: 18),
-        TextField(
-          controller: controller,
-          autofocus: true,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(
-            labelText: metric ? 'kg' : 'lb',
-            suffixText: metric ? 'kg' : 'lb',
-          ),
-        ),
-        const SizedBox(height: 20),
-        FilledButton(onPressed: _save, child: Text(zh ? '保存' : 'Save')),
-      ],
-    );
-  }
-
-  Future<void> _save() async {
-    final value = double.tryParse(controller.text.trim());
-    if (value == null) return;
-    final metric =
-        ref.read(appControllerProvider).unitSystem == UnitSystem.metric;
-    try {
-      await ref
-          .read(repositoryProvider)
-          .addWeight(kilograms: metric ? value : value / 2.2046226218);
-      if (mounted) Navigator.pop(context);
-    } on FormatException catch (error) {
-      if (mounted) showMessage(context, error.message);
-    }
-  }
-}
-
-class _DailyNumberSheet extends ConsumerStatefulWidget {
-  const _DailyNumberSheet({required this.calories, required this.initialValue});
-  final bool calories;
-  final int initialValue;
-
-  @override
-  ConsumerState<_DailyNumberSheet> createState() => _DailyNumberSheetState();
-}
-
-class _DailyNumberSheetState extends ConsumerState<_DailyNumberSheet> {
-  late final controller = TextEditingController(
-    text: widget.initialValue == 0 ? '' : '${widget.initialValue}',
-  );
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final zh = Localizations.localeOf(context).languageCode == 'zh';
-    final title = widget.calories
-        ? (zh ? '记录今日热量' : 'Log today’s calories')
-        : (zh ? '记录今日步数' : 'Log today’s steps');
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(title, style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: 8),
-        Text(
-          widget.calories
-              ? (zh
-                    ? '填写今天目前累计摄入的热量。'
-                    : 'Enter your total intake so far today.')
-              : (zh
-                    ? '填写手机或手环显示的今日累计步数。'
-                    : 'Enter today’s total from your phone or wearable.'),
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        const SizedBox(height: 18),
-        TextField(
-          controller: controller,
-          autofocus: true,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: widget.calories ? 'kcal' : (zh ? '步' : 'steps'),
-            suffixText: widget.calories ? 'kcal' : (zh ? '步' : 'steps'),
-          ),
-        ),
-        const SizedBox(height: 20),
-        FilledButton(onPressed: _save, child: Text(zh ? '保存' : 'Save')),
-      ],
-    );
-  }
-
-  Future<void> _save() async {
-    final value = int.tryParse(controller.text.trim());
-    if (value == null) return;
-    try {
-      await ref
-          .read(repositoryProvider)
-          .setDailyHealth(
-            dateKey: localDateKey(DateTime.now()),
-            calories: widget.calories ? value : null,
-            steps: widget.calories ? null : value,
-          );
-      if (mounted) Navigator.pop(context);
-    } on FormatException catch (error) {
-      if (mounted) showMessage(context, error.message);
-    }
   }
 }
 

@@ -77,6 +77,69 @@ class DailyHealthLogs extends Table {
   TextColumn get timezoneName => text().withDefault(const Constant('UTC'))();
   IntColumn get calories => integer().withDefault(const Constant(0))();
   IntColumn get steps => integer().withDefault(const Constant(0))();
+  TextColumn get stepSource => text().withDefault(const Constant('manual'))();
+  IntColumn get stepsSyncedAtUtcMs => integer().nullable()();
+  IntColumn get revision => integer().withDefault(const Constant(1))();
+  IntColumn get updatedAtUtcMs => integer()();
+  IntColumn get deletedAtUtcMs => integer().nullable()();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+class CalorieEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get dateKey => text()();
+  TextColumn get mealType => text()();
+  IntColumn get calories => integer()();
+  IntColumn get loggedAtUtcMs => integer()();
+  TextColumn get timezoneName => text().withDefault(const Constant('UTC'))();
+  IntColumn get revision => integer().withDefault(const Constant(1))();
+  IntColumn get updatedAtUtcMs => integer()();
+  IntColumn get deletedAtUtcMs => integer().nullable()();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+class DailyTasks extends Table {
+  @override
+  String get tableName => 'daily_tasks';
+
+  TextColumn get id => text()();
+  TextColumn get kind => text().withDefault(const Constant('custom'))();
+  TextColumn get title => text()();
+  TextColumn get iconKey => text()();
+  TextColumn get colorKey => text()();
+  TextColumn get goalType => text()();
+  RealColumn get targetValue => real()();
+  TextColumn get unit => text()();
+  RealColumn get quickIncrement => real()();
+  IntColumn get weekdaysMask => integer().withDefault(const Constant(127))();
+  IntColumn get reminderMinute => integer().nullable()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  BoolColumn get enabled => boolean().withDefault(const Constant(true))();
+  IntColumn get createdAtUtcMs => integer()();
+  IntColumn get revision => integer().withDefault(const Constant(1))();
+  IntColumn get updatedAtUtcMs => integer()();
+  IntColumn get deletedAtUtcMs => integer().nullable()();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+class TaskProgressEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get taskId => text().references(DailyTasks, #id)();
+  TextColumn get dateKey => text()();
+  RealColumn get deltaValue => real()();
+  RealColumn get goalSnapshot => real()();
+  TextColumn get unitSnapshot => text()();
+  IntColumn get loggedAtUtcMs => integer()();
+  TextColumn get timezoneName => text().withDefault(const Constant('UTC'))();
   IntColumn get revision => integer().withDefault(const Constant(1))();
   IntColumn get updatedAtUtcMs => integer()();
   IntColumn get deletedAtUtcMs => integer().nullable()();
@@ -145,6 +208,9 @@ class SyncOperations extends Table {
     WaterEntries,
     WeightEntries,
     DailyHealthLogs,
+    CalorieEntries,
+    DailyTasks,
+    TaskProgressEntries,
     UserProfiles,
     OnboardingProfiles,
     AppSettings,
@@ -157,7 +223,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -169,6 +235,39 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 3) {
         await m.createTable(dailyHealthLogs);
+      }
+      if (from < 4) {
+        await m.addColumn(dailyHealthLogs, dailyHealthLogs.stepSource);
+        await m.addColumn(dailyHealthLogs, dailyHealthLogs.stepsSyncedAtUtcMs);
+        await m.createTable(calorieEntries);
+        await customStatement('''
+          INSERT INTO calorie_entries (
+            id, date_key, meal_type, calories, logged_at_utc_ms, timezone_name,
+            revision, updated_at_utc_ms, deleted_at_utc_ms, sync_status
+          )
+          SELECT
+            'migrated-calories-' || id, date_key, 'uncategorized', calories,
+            updated_at_utc_ms, timezone_name, 1, updated_at_utc_ms,
+            deleted_at_utc_ms, sync_status
+          FROM daily_health_logs
+          WHERE calories > 0
+        ''');
+      }
+      if (from < 5) {
+        await m.createTable(dailyTasks);
+        await m.createTable(taskProgressEntries);
+      } else if (from == 5) {
+        await customStatement('ALTER TABLE custom_tasks RENAME TO daily_tasks');
+        await m.addColumn(dailyTasks, dailyTasks.kind);
+        await customStatement(
+          "UPDATE daily_tasks SET kind = 'custom' WHERE kind IS NULL OR kind = ''",
+        );
+        await customStatement('''
+          UPDATE sync_operations
+          SET entity_type = 'daily_task',
+              payload_json = json_set(payload_json, '\$.kind', 'custom')
+          WHERE entity_type = 'custom_task'
+        ''');
       }
     },
     beforeOpen: (details) async {
@@ -235,12 +334,103 @@ class AppDatabase extends _$AppDatabase {
             ..limit(1))
           .watchSingleOrNull();
 
+  Stream<List<CalorieEntry>> watchCaloriesForDay(String dateKey) =>
+      (select(calorieEntries)
+            ..where(
+              (row) =>
+                  row.dateKey.equals(dateKey) & row.deletedAtUtcMs.isNull(),
+            )
+            ..orderBy([(row) => OrderingTerm.asc(row.loggedAtUtcMs)]))
+          .watch();
+
+  Future<List<CalorieEntry>> caloriesForDay(String dateKey) =>
+      (select(calorieEntries)
+            ..where(
+              (row) =>
+                  row.dateKey.equals(dateKey) & row.deletedAtUtcMs.isNull(),
+            )
+            ..orderBy([(row) => OrderingTerm.asc(row.loggedAtUtcMs)]))
+          .get();
+
+  Future<WaterEntry?> latestWaterForRange(int startUtcMs, int endUtcMs) =>
+      (select(waterEntries)
+            ..where(
+              (row) =>
+                  row.loggedAtUtcMs.isBiggerOrEqualValue(startUtcMs) &
+                  row.loggedAtUtcMs.isSmallerThanValue(endUtcMs) &
+                  row.deletedAtUtcMs.isNull(),
+            )
+            ..orderBy([(row) => OrderingTerm.desc(row.loggedAtUtcMs)])
+            ..limit(1))
+          .getSingleOrNull();
+
   Future<DailyHealthLog?> dailyHealth(String dateKey) =>
       (select(dailyHealthLogs)
             ..where(
               (row) =>
                   row.dateKey.equals(dateKey) & row.deletedAtUtcMs.isNull(),
             )
+            ..limit(1))
+          .getSingleOrNull();
+
+  Stream<List<DailyTask>> watchDailyTasks() =>
+      (select(dailyTasks)
+            ..where((row) => row.deletedAtUtcMs.isNull())
+            ..orderBy([
+              (row) => OrderingTerm.asc(row.sortOrder),
+              (row) => OrderingTerm.asc(row.createdAtUtcMs),
+            ]))
+          .watch();
+
+  Future<List<DailyTask>> getDailyTasks() =>
+      (select(dailyTasks)
+            ..where((row) => row.deletedAtUtcMs.isNull())
+            ..orderBy([
+              (row) => OrderingTerm.asc(row.sortOrder),
+              (row) => OrderingTerm.asc(row.createdAtUtcMs),
+            ]))
+          .get();
+
+  Future<DailyTask?> dailyTask(String id) =>
+      (select(dailyTasks)..where((row) => row.id.equals(id))).getSingleOrNull();
+
+  Future<DailyTask?> dailyTaskByKind(String kind) =>
+      (select(dailyTasks)
+            ..where((row) => row.kind.equals(kind))
+            ..orderBy([(row) => OrderingTerm.desc(row.updatedAtUtcMs)])
+            ..limit(1))
+          .getSingleOrNull();
+
+  Stream<List<TaskProgressEntry>> watchTaskProgressForDay(String dateKey) =>
+      (select(taskProgressEntries)
+            ..where(
+              (row) =>
+                  row.dateKey.equals(dateKey) & row.deletedAtUtcMs.isNull(),
+            )
+            ..orderBy([(row) => OrderingTerm.asc(row.loggedAtUtcMs)]))
+          .watch();
+
+  Future<List<TaskProgressEntry>> taskProgressForDay(String dateKey) =>
+      (select(taskProgressEntries)
+            ..where(
+              (row) =>
+                  row.dateKey.equals(dateKey) & row.deletedAtUtcMs.isNull(),
+            )
+            ..orderBy([(row) => OrderingTerm.asc(row.loggedAtUtcMs)]))
+          .get();
+
+  Future<TaskProgressEntry?> latestTaskProgress(
+    String taskId,
+    String dateKey,
+  ) =>
+      (select(taskProgressEntries)
+            ..where(
+              (row) =>
+                  row.taskId.equals(taskId) &
+                  row.dateKey.equals(dateKey) &
+                  row.deletedAtUtcMs.isNull(),
+            )
+            ..orderBy([(row) => OrderingTerm.desc(row.loggedAtUtcMs)])
             ..limit(1))
           .getSingleOrNull();
 
@@ -310,6 +500,13 @@ class AppDatabase extends _$AppDatabase {
     'dailyHealthLogs': (await select(
       dailyHealthLogs,
     ).get()).map(_dailyHealthJson).toList(),
+    'calorieEntries': (await select(
+      calorieEntries,
+    ).get()).map(_calorieJson).toList(),
+    'dailyTasks': (await select(dailyTasks).get()).map(_dailyTaskJson).toList(),
+    'taskProgressEntries': (await select(
+      taskProgressEntries,
+    ).get()).map(_taskProgressJson).toList(),
     'profiles': (await select(userProfiles).get()).map(_profileJson).toList(),
     'settings': (await select(appSettings).get())
         .map(
@@ -365,6 +562,34 @@ class AppDatabase extends _$AppDatabase {
         dailyHealthLogs,
       )..where((row) => row.deletedAtUtcMs.isNull())).write(
         DailyHealthLogsCompanion(
+          deletedAtUtcMs: Value(now),
+          updatedAtUtcMs: Value(now),
+          syncStatus: const Value('pending'),
+        ),
+      );
+      await (update(
+        calorieEntries,
+      )..where((row) => row.deletedAtUtcMs.isNull())).write(
+        CalorieEntriesCompanion(
+          deletedAtUtcMs: Value(now),
+          updatedAtUtcMs: Value(now),
+          syncStatus: const Value('pending'),
+        ),
+      );
+      await (update(
+        taskProgressEntries,
+      )..where((row) => row.deletedAtUtcMs.isNull())).write(
+        TaskProgressEntriesCompanion(
+          deletedAtUtcMs: Value(now),
+          updatedAtUtcMs: Value(now),
+          syncStatus: const Value('pending'),
+        ),
+      );
+      await (update(
+        dailyTasks,
+      )..where((row) => row.deletedAtUtcMs.isNull())).write(
+        DailyTasksCompanion(
+          enabled: const Value(false),
           deletedAtUtcMs: Value(now),
           updatedAtUtcMs: Value(now),
           syncStatus: const Value('pending'),
@@ -428,6 +653,54 @@ class AppDatabase extends _$AppDatabase {
     'timezone': row.timezoneName,
     'calories': row.calories,
     'steps': row.steps,
+    'stepSource': row.stepSource,
+    'stepsSyncedAtUtcMs': row.stepsSyncedAtUtcMs,
+    'revision': row.revision,
+    'updatedAtUtcMs': row.updatedAtUtcMs,
+    'deletedAtUtcMs': row.deletedAtUtcMs,
+  };
+
+  Map<String, Object?> _calorieJson(CalorieEntry row) => {
+    'id': row.id,
+    'dateKey': row.dateKey,
+    'mealType': row.mealType,
+    'calories': row.calories,
+    'loggedAtUtcMs': row.loggedAtUtcMs,
+    'timezone': row.timezoneName,
+    'revision': row.revision,
+    'updatedAtUtcMs': row.updatedAtUtcMs,
+    'deletedAtUtcMs': row.deletedAtUtcMs,
+  };
+
+  Map<String, Object?> _dailyTaskJson(DailyTask row) => {
+    'id': row.id,
+    'kind': row.kind,
+    'title': row.title,
+    'iconKey': row.iconKey,
+    'colorKey': row.colorKey,
+    'goalType': row.goalType,
+    'targetValue': row.targetValue,
+    'unit': row.unit,
+    'quickIncrement': row.quickIncrement,
+    'weekdaysMask': row.weekdaysMask,
+    'reminderMinute': row.reminderMinute,
+    'sortOrder': row.sortOrder,
+    'enabled': row.enabled,
+    'createdAtUtcMs': row.createdAtUtcMs,
+    'revision': row.revision,
+    'updatedAtUtcMs': row.updatedAtUtcMs,
+    'deletedAtUtcMs': row.deletedAtUtcMs,
+  };
+
+  Map<String, Object?> _taskProgressJson(TaskProgressEntry row) => {
+    'id': row.id,
+    'taskId': row.taskId,
+    'dateKey': row.dateKey,
+    'deltaValue': row.deltaValue,
+    'goalSnapshot': row.goalSnapshot,
+    'unitSnapshot': row.unitSnapshot,
+    'loggedAtUtcMs': row.loggedAtUtcMs,
+    'timezone': row.timezoneName,
     'revision': row.revision,
     'updatedAtUtcMs': row.updatedAtUtcMs,
     'deletedAtUtcMs': row.deletedAtUtcMs,

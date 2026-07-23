@@ -82,10 +82,18 @@ Sessions, water entries, and weight entries are append-oriented and use record-l
 - `fasting_session`: `id`, `planId`, `startedAt`, `targetMinutes`, `endedAt`, `endReason`, `symptoms`, revision fields.
 - `water_entry`: `id`, `sessionId`, `milliliters`, `loggedAt`, revision fields.
 - `weight_entry`: `id`, `kilograms`, `loggedAt`, `note`, revision fields.
-- `daily_health_log`: `id`, `dateKey`, `timezone`, `calories`, `steps`, revision fields. One active record per local calendar day.
+- `daily_health_log`: `id`, `dateKey`, `timezone`, denormalized `calories`, authoritative `steps`, `stepSource` (`healthkit` or `manual`), `stepsSyncedAtUtcMs`, revision fields. One active record per local calendar day.
+- `calorie_entry`: `id`, `dateKey`, `mealType` (`breakfast`, `lunch`, `dinner`, `snack`, or `uncategorized`), `calories`, `loggedAt`, `timezone`, revision fields. The server-calculated daily sum must match `daily_health_log.calories`.
+- `daily_task`: `id`, `kind` (`water`, `calories`, `weight`, `steps`, or `custom`), `title`, `iconKey`, `colorKey`, `goalType` (`check`, `count`, `duration`, or `distance`), `targetValue`, `unit`, `quickIncrement`, `weekdaysMask`, optional `reminderMinute`, `sortOrder`, `enabled`, `createdAtUtcMs`, revision fields. At most ten active tasks may exist for one user. Water and calories are fixed but sortable; weight, steps, and custom tasks can be soft-deleted.
+- `task_progress_entry`: `id`, `taskId`, `dateKey`, positive `deltaValue`, `goalSnapshot`, `unitSnapshot`, `loggedAtUtcMs`, `timezone`, revision fields. These entries are valid only for `kind=custom`; progress for the four system kinds is derived from the canonical health records. Daily custom progress is the sum of active entries; undo is represented by a tombstone, never a negative entry.
+- Tracking preferences: `waterGoalMl`, `stepGoal`, optional `calorieGoal`, optional `targetWeightKg`, and `quickWaterMl`. Values use the same canonical units as records.
 - `reminder_settings`: reminder toggles, local wall-clock times, IANA timezone, revision fields.
 
 Weight is always kilograms and water is always milliliters on the wire. Display units never alter stored values.
+
+HealthKit remains a device-side read-only source. The server receives only the resulting daily step total, source label, and sync timestamp; it must never attempt to merge `manual` and `healthkit` totals. A newer HealthKit-sourced daily value replaces a manual fallback for the same local date.
+
+Custom-task weekday masks use bit 0 for Monday through bit 6 for Sunday. Reminder scheduling remains device-side; the server syncs the preferred local wall-clock minute and schedule but does not send task reminders in the MVP. Historical completion must use `goalSnapshot` rather than the task's latest target. A deleted weight or steps task removes only its card configuration; the server must not cascade that deletion into weight, daily-health, or HealthKit-derived history. Re-adding a system task restores its soft-deleted configuration and never duplicates its kind.
 
 ## Operational requirements
 

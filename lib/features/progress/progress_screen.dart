@@ -52,7 +52,12 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
           ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(22, 8, 22, 30),
+              padding: const EdgeInsets.fromLTRB(
+                22,
+                8,
+                22,
+                kFloatingNavigationClearance,
+              ),
               children: [
                 _OverviewCard(
                   sessions: sessions,
@@ -98,7 +103,11 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                 const SizedBox(height: 24),
                 SectionTitle(s.weeklyInsight),
                 LighterCard(
-                  color: const Color(0xFFF1F2F8),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFFF0EEFF), Color(0xFFF8F6FF)],
+                  ),
                   onTap: () => showMessage(
                     context,
                     '${s.weeklyInsight} · ${s.comingSoon}',
@@ -205,6 +214,11 @@ class _OverviewCard extends StatelessWidget {
         : ((complete / ended.length) * 100).round();
     final zh = Localizations.localeOf(context).languageCode == 'zh';
     return LighterCard(
+      gradient: const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFFEAF7FF), Color(0xFFF4F1FF)],
+      ),
       child: Column(
         children: [
           Row(
@@ -235,6 +249,9 @@ class _OverviewCard extends StatelessWidget {
                   context,
                   '$complete',
                   zh ? '完成次数' : 'Completed',
+                  CupertinoIcons.check_mark_circled_solid,
+                  AppColors.water,
+                  AppColors.waterTint,
                 ),
               ),
               Expanded(
@@ -242,6 +259,9 @@ class _OverviewCard extends StatelessWidget {
                   context,
                   '${avgMinutes ~/ 60}:${(avgMinutes % 60).toString().padLeft(2, '0')}',
                   zh ? '平均时长' : 'Average',
+                  CupertinoIcons.timer,
+                  AppColors.purple,
+                  AppColors.purpleTint,
                 ),
               ),
               Expanded(
@@ -249,6 +269,9 @@ class _OverviewCard extends StatelessWidget {
                   context,
                   '$consistency%',
                   zh ? '坚持度' : 'Consistency',
+                  CupertinoIcons.flame_fill,
+                  AppColors.coral,
+                  AppColors.coralTint,
                 ),
               ),
             ],
@@ -258,7 +281,7 @@ class _OverviewCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.surface2,
+              color: Colors.white.withValues(alpha: .62),
               borderRadius: BorderRadius.circular(13),
             ),
             child: Text(
@@ -273,25 +296,38 @@ class _OverviewCard extends StatelessWidget {
     );
   }
 
-  Widget _overviewStat(BuildContext context, String value, String label) =>
-      Column(
-        children: [
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 23,
-              fontWeight: FontWeight.w700,
-              color: AppColors.strong,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 11, color: AppColors.faint),
-          ),
-        ],
-      );
+  Widget _overviewStat(
+    BuildContext context,
+    String value,
+    String label,
+    IconData icon,
+    Color accent,
+    Color tint,
+  ) => Column(
+    children: [
+      Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(color: tint, shape: BoxShape.circle),
+        child: Icon(icon, size: 17, color: accent),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        value,
+        style: const TextStyle(
+          fontSize: 23,
+          fontWeight: FontWeight.w700,
+          color: AppColors.strong,
+        ),
+      ),
+      const SizedBox(height: 5),
+      Text(
+        label,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 11, color: AppColors.faint),
+      ),
+    ],
+  );
 }
 
 class _CalendarCard extends StatelessWidget {

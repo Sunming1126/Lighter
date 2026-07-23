@@ -2537,6 +2537,28 @@ class $DailyHealthLogsTable extends DailyHealthLogs
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _stepSourceMeta = const VerificationMeta(
+    'stepSource',
+  );
+  @override
+  late final GeneratedColumn<String> stepSource = GeneratedColumn<String>(
+    'step_source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('manual'),
+  );
+  static const VerificationMeta _stepsSyncedAtUtcMsMeta =
+      const VerificationMeta('stepsSyncedAtUtcMs');
+  @override
+  late final GeneratedColumn<int> stepsSyncedAtUtcMs = GeneratedColumn<int>(
+    'steps_synced_at_utc_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _revisionMeta = const VerificationMeta(
     'revision',
   );
@@ -2590,6 +2612,8 @@ class $DailyHealthLogsTable extends DailyHealthLogs
     timezoneName,
     calories,
     steps,
+    stepSource,
+    stepsSyncedAtUtcMs,
     revision,
     updatedAtUtcMs,
     deletedAtUtcMs,
@@ -2639,6 +2663,21 @@ class $DailyHealthLogsTable extends DailyHealthLogs
       context.handle(
         _stepsMeta,
         steps.isAcceptableOrUnknown(data['steps']!, _stepsMeta),
+      );
+    }
+    if (data.containsKey('step_source')) {
+      context.handle(
+        _stepSourceMeta,
+        stepSource.isAcceptableOrUnknown(data['step_source']!, _stepSourceMeta),
+      );
+    }
+    if (data.containsKey('steps_synced_at_utc_ms')) {
+      context.handle(
+        _stepsSyncedAtUtcMsMeta,
+        stepsSyncedAtUtcMs.isAcceptableOrUnknown(
+          data['steps_synced_at_utc_ms']!,
+          _stepsSyncedAtUtcMsMeta,
+        ),
       );
     }
     if (data.containsKey('revision')) {
@@ -2702,6 +2741,14 @@ class $DailyHealthLogsTable extends DailyHealthLogs
         DriftSqlType.int,
         data['${effectivePrefix}steps'],
       )!,
+      stepSource: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}step_source'],
+      )!,
+      stepsSyncedAtUtcMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}steps_synced_at_utc_ms'],
+      ),
       revision: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}revision'],
@@ -2733,6 +2780,8 @@ class DailyHealthLog extends DataClass implements Insertable<DailyHealthLog> {
   final String timezoneName;
   final int calories;
   final int steps;
+  final String stepSource;
+  final int? stepsSyncedAtUtcMs;
   final int revision;
   final int updatedAtUtcMs;
   final int? deletedAtUtcMs;
@@ -2743,6 +2792,8 @@ class DailyHealthLog extends DataClass implements Insertable<DailyHealthLog> {
     required this.timezoneName,
     required this.calories,
     required this.steps,
+    required this.stepSource,
+    this.stepsSyncedAtUtcMs,
     required this.revision,
     required this.updatedAtUtcMs,
     this.deletedAtUtcMs,
@@ -2756,6 +2807,10 @@ class DailyHealthLog extends DataClass implements Insertable<DailyHealthLog> {
     map['timezone_name'] = Variable<String>(timezoneName);
     map['calories'] = Variable<int>(calories);
     map['steps'] = Variable<int>(steps);
+    map['step_source'] = Variable<String>(stepSource);
+    if (!nullToAbsent || stepsSyncedAtUtcMs != null) {
+      map['steps_synced_at_utc_ms'] = Variable<int>(stepsSyncedAtUtcMs);
+    }
     map['revision'] = Variable<int>(revision);
     map['updated_at_utc_ms'] = Variable<int>(updatedAtUtcMs);
     if (!nullToAbsent || deletedAtUtcMs != null) {
@@ -2772,6 +2827,10 @@ class DailyHealthLog extends DataClass implements Insertable<DailyHealthLog> {
       timezoneName: Value(timezoneName),
       calories: Value(calories),
       steps: Value(steps),
+      stepSource: Value(stepSource),
+      stepsSyncedAtUtcMs: stepsSyncedAtUtcMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(stepsSyncedAtUtcMs),
       revision: Value(revision),
       updatedAtUtcMs: Value(updatedAtUtcMs),
       deletedAtUtcMs: deletedAtUtcMs == null && nullToAbsent
@@ -2792,6 +2851,8 @@ class DailyHealthLog extends DataClass implements Insertable<DailyHealthLog> {
       timezoneName: serializer.fromJson<String>(json['timezoneName']),
       calories: serializer.fromJson<int>(json['calories']),
       steps: serializer.fromJson<int>(json['steps']),
+      stepSource: serializer.fromJson<String>(json['stepSource']),
+      stepsSyncedAtUtcMs: serializer.fromJson<int?>(json['stepsSyncedAtUtcMs']),
       revision: serializer.fromJson<int>(json['revision']),
       updatedAtUtcMs: serializer.fromJson<int>(json['updatedAtUtcMs']),
       deletedAtUtcMs: serializer.fromJson<int?>(json['deletedAtUtcMs']),
@@ -2807,6 +2868,8 @@ class DailyHealthLog extends DataClass implements Insertable<DailyHealthLog> {
       'timezoneName': serializer.toJson<String>(timezoneName),
       'calories': serializer.toJson<int>(calories),
       'steps': serializer.toJson<int>(steps),
+      'stepSource': serializer.toJson<String>(stepSource),
+      'stepsSyncedAtUtcMs': serializer.toJson<int?>(stepsSyncedAtUtcMs),
       'revision': serializer.toJson<int>(revision),
       'updatedAtUtcMs': serializer.toJson<int>(updatedAtUtcMs),
       'deletedAtUtcMs': serializer.toJson<int?>(deletedAtUtcMs),
@@ -2820,6 +2883,8 @@ class DailyHealthLog extends DataClass implements Insertable<DailyHealthLog> {
     String? timezoneName,
     int? calories,
     int? steps,
+    String? stepSource,
+    Value<int?> stepsSyncedAtUtcMs = const Value.absent(),
     int? revision,
     int? updatedAtUtcMs,
     Value<int?> deletedAtUtcMs = const Value.absent(),
@@ -2830,6 +2895,10 @@ class DailyHealthLog extends DataClass implements Insertable<DailyHealthLog> {
     timezoneName: timezoneName ?? this.timezoneName,
     calories: calories ?? this.calories,
     steps: steps ?? this.steps,
+    stepSource: stepSource ?? this.stepSource,
+    stepsSyncedAtUtcMs: stepsSyncedAtUtcMs.present
+        ? stepsSyncedAtUtcMs.value
+        : this.stepsSyncedAtUtcMs,
     revision: revision ?? this.revision,
     updatedAtUtcMs: updatedAtUtcMs ?? this.updatedAtUtcMs,
     deletedAtUtcMs: deletedAtUtcMs.present
@@ -2846,6 +2915,12 @@ class DailyHealthLog extends DataClass implements Insertable<DailyHealthLog> {
           : this.timezoneName,
       calories: data.calories.present ? data.calories.value : this.calories,
       steps: data.steps.present ? data.steps.value : this.steps,
+      stepSource: data.stepSource.present
+          ? data.stepSource.value
+          : this.stepSource,
+      stepsSyncedAtUtcMs: data.stepsSyncedAtUtcMs.present
+          ? data.stepsSyncedAtUtcMs.value
+          : this.stepsSyncedAtUtcMs,
       revision: data.revision.present ? data.revision.value : this.revision,
       updatedAtUtcMs: data.updatedAtUtcMs.present
           ? data.updatedAtUtcMs.value
@@ -2867,6 +2942,8 @@ class DailyHealthLog extends DataClass implements Insertable<DailyHealthLog> {
           ..write('timezoneName: $timezoneName, ')
           ..write('calories: $calories, ')
           ..write('steps: $steps, ')
+          ..write('stepSource: $stepSource, ')
+          ..write('stepsSyncedAtUtcMs: $stepsSyncedAtUtcMs, ')
           ..write('revision: $revision, ')
           ..write('updatedAtUtcMs: $updatedAtUtcMs, ')
           ..write('deletedAtUtcMs: $deletedAtUtcMs, ')
@@ -2882,6 +2959,8 @@ class DailyHealthLog extends DataClass implements Insertable<DailyHealthLog> {
     timezoneName,
     calories,
     steps,
+    stepSource,
+    stepsSyncedAtUtcMs,
     revision,
     updatedAtUtcMs,
     deletedAtUtcMs,
@@ -2896,6 +2975,8 @@ class DailyHealthLog extends DataClass implements Insertable<DailyHealthLog> {
           other.timezoneName == this.timezoneName &&
           other.calories == this.calories &&
           other.steps == this.steps &&
+          other.stepSource == this.stepSource &&
+          other.stepsSyncedAtUtcMs == this.stepsSyncedAtUtcMs &&
           other.revision == this.revision &&
           other.updatedAtUtcMs == this.updatedAtUtcMs &&
           other.deletedAtUtcMs == this.deletedAtUtcMs &&
@@ -2908,6 +2989,8 @@ class DailyHealthLogsCompanion extends UpdateCompanion<DailyHealthLog> {
   final Value<String> timezoneName;
   final Value<int> calories;
   final Value<int> steps;
+  final Value<String> stepSource;
+  final Value<int?> stepsSyncedAtUtcMs;
   final Value<int> revision;
   final Value<int> updatedAtUtcMs;
   final Value<int?> deletedAtUtcMs;
@@ -2919,6 +3002,8 @@ class DailyHealthLogsCompanion extends UpdateCompanion<DailyHealthLog> {
     this.timezoneName = const Value.absent(),
     this.calories = const Value.absent(),
     this.steps = const Value.absent(),
+    this.stepSource = const Value.absent(),
+    this.stepsSyncedAtUtcMs = const Value.absent(),
     this.revision = const Value.absent(),
     this.updatedAtUtcMs = const Value.absent(),
     this.deletedAtUtcMs = const Value.absent(),
@@ -2931,6 +3016,8 @@ class DailyHealthLogsCompanion extends UpdateCompanion<DailyHealthLog> {
     this.timezoneName = const Value.absent(),
     this.calories = const Value.absent(),
     this.steps = const Value.absent(),
+    this.stepSource = const Value.absent(),
+    this.stepsSyncedAtUtcMs = const Value.absent(),
     this.revision = const Value.absent(),
     required int updatedAtUtcMs,
     this.deletedAtUtcMs = const Value.absent(),
@@ -2945,6 +3032,8 @@ class DailyHealthLogsCompanion extends UpdateCompanion<DailyHealthLog> {
     Expression<String>? timezoneName,
     Expression<int>? calories,
     Expression<int>? steps,
+    Expression<String>? stepSource,
+    Expression<int>? stepsSyncedAtUtcMs,
     Expression<int>? revision,
     Expression<int>? updatedAtUtcMs,
     Expression<int>? deletedAtUtcMs,
@@ -2957,6 +3046,9 @@ class DailyHealthLogsCompanion extends UpdateCompanion<DailyHealthLog> {
       if (timezoneName != null) 'timezone_name': timezoneName,
       if (calories != null) 'calories': calories,
       if (steps != null) 'steps': steps,
+      if (stepSource != null) 'step_source': stepSource,
+      if (stepsSyncedAtUtcMs != null)
+        'steps_synced_at_utc_ms': stepsSyncedAtUtcMs,
       if (revision != null) 'revision': revision,
       if (updatedAtUtcMs != null) 'updated_at_utc_ms': updatedAtUtcMs,
       if (deletedAtUtcMs != null) 'deleted_at_utc_ms': deletedAtUtcMs,
@@ -2971,6 +3063,8 @@ class DailyHealthLogsCompanion extends UpdateCompanion<DailyHealthLog> {
     Value<String>? timezoneName,
     Value<int>? calories,
     Value<int>? steps,
+    Value<String>? stepSource,
+    Value<int?>? stepsSyncedAtUtcMs,
     Value<int>? revision,
     Value<int>? updatedAtUtcMs,
     Value<int?>? deletedAtUtcMs,
@@ -2983,6 +3077,8 @@ class DailyHealthLogsCompanion extends UpdateCompanion<DailyHealthLog> {
       timezoneName: timezoneName ?? this.timezoneName,
       calories: calories ?? this.calories,
       steps: steps ?? this.steps,
+      stepSource: stepSource ?? this.stepSource,
+      stepsSyncedAtUtcMs: stepsSyncedAtUtcMs ?? this.stepsSyncedAtUtcMs,
       revision: revision ?? this.revision,
       updatedAtUtcMs: updatedAtUtcMs ?? this.updatedAtUtcMs,
       deletedAtUtcMs: deletedAtUtcMs ?? this.deletedAtUtcMs,
@@ -3008,6 +3104,12 @@ class DailyHealthLogsCompanion extends UpdateCompanion<DailyHealthLog> {
     }
     if (steps.present) {
       map['steps'] = Variable<int>(steps.value);
+    }
+    if (stepSource.present) {
+      map['step_source'] = Variable<String>(stepSource.value);
+    }
+    if (stepsSyncedAtUtcMs.present) {
+      map['steps_synced_at_utc_ms'] = Variable<int>(stepsSyncedAtUtcMs.value);
     }
     if (revision.present) {
       map['revision'] = Variable<int>(revision.value);
@@ -3035,6 +3137,2392 @@ class DailyHealthLogsCompanion extends UpdateCompanion<DailyHealthLog> {
           ..write('timezoneName: $timezoneName, ')
           ..write('calories: $calories, ')
           ..write('steps: $steps, ')
+          ..write('stepSource: $stepSource, ')
+          ..write('stepsSyncedAtUtcMs: $stepsSyncedAtUtcMs, ')
+          ..write('revision: $revision, ')
+          ..write('updatedAtUtcMs: $updatedAtUtcMs, ')
+          ..write('deletedAtUtcMs: $deletedAtUtcMs, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CalorieEntriesTable extends CalorieEntries
+    with TableInfo<$CalorieEntriesTable, CalorieEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CalorieEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dateKeyMeta = const VerificationMeta(
+    'dateKey',
+  );
+  @override
+  late final GeneratedColumn<String> dateKey = GeneratedColumn<String>(
+    'date_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _mealTypeMeta = const VerificationMeta(
+    'mealType',
+  );
+  @override
+  late final GeneratedColumn<String> mealType = GeneratedColumn<String>(
+    'meal_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _caloriesMeta = const VerificationMeta(
+    'calories',
+  );
+  @override
+  late final GeneratedColumn<int> calories = GeneratedColumn<int>(
+    'calories',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _loggedAtUtcMsMeta = const VerificationMeta(
+    'loggedAtUtcMs',
+  );
+  @override
+  late final GeneratedColumn<int> loggedAtUtcMs = GeneratedColumn<int>(
+    'logged_at_utc_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _timezoneNameMeta = const VerificationMeta(
+    'timezoneName',
+  );
+  @override
+  late final GeneratedColumn<String> timezoneName = GeneratedColumn<String>(
+    'timezone_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UTC'),
+  );
+  static const VerificationMeta _revisionMeta = const VerificationMeta(
+    'revision',
+  );
+  @override
+  late final GeneratedColumn<int> revision = GeneratedColumn<int>(
+    'revision',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _updatedAtUtcMsMeta = const VerificationMeta(
+    'updatedAtUtcMs',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAtUtcMs = GeneratedColumn<int>(
+    'updated_at_utc_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtUtcMsMeta = const VerificationMeta(
+    'deletedAtUtcMs',
+  );
+  @override
+  late final GeneratedColumn<int> deletedAtUtcMs = GeneratedColumn<int>(
+    'deleted_at_utc_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    dateKey,
+    mealType,
+    calories,
+    loggedAtUtcMs,
+    timezoneName,
+    revision,
+    updatedAtUtcMs,
+    deletedAtUtcMs,
+    syncStatus,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'calorie_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CalorieEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('date_key')) {
+      context.handle(
+        _dateKeyMeta,
+        dateKey.isAcceptableOrUnknown(data['date_key']!, _dateKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateKeyMeta);
+    }
+    if (data.containsKey('meal_type')) {
+      context.handle(
+        _mealTypeMeta,
+        mealType.isAcceptableOrUnknown(data['meal_type']!, _mealTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_mealTypeMeta);
+    }
+    if (data.containsKey('calories')) {
+      context.handle(
+        _caloriesMeta,
+        calories.isAcceptableOrUnknown(data['calories']!, _caloriesMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_caloriesMeta);
+    }
+    if (data.containsKey('logged_at_utc_ms')) {
+      context.handle(
+        _loggedAtUtcMsMeta,
+        loggedAtUtcMs.isAcceptableOrUnknown(
+          data['logged_at_utc_ms']!,
+          _loggedAtUtcMsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_loggedAtUtcMsMeta);
+    }
+    if (data.containsKey('timezone_name')) {
+      context.handle(
+        _timezoneNameMeta,
+        timezoneName.isAcceptableOrUnknown(
+          data['timezone_name']!,
+          _timezoneNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('revision')) {
+      context.handle(
+        _revisionMeta,
+        revision.isAcceptableOrUnknown(data['revision']!, _revisionMeta),
+      );
+    }
+    if (data.containsKey('updated_at_utc_ms')) {
+      context.handle(
+        _updatedAtUtcMsMeta,
+        updatedAtUtcMs.isAcceptableOrUnknown(
+          data['updated_at_utc_ms']!,
+          _updatedAtUtcMsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtUtcMsMeta);
+    }
+    if (data.containsKey('deleted_at_utc_ms')) {
+      context.handle(
+        _deletedAtUtcMsMeta,
+        deletedAtUtcMs.isAcceptableOrUnknown(
+          data['deleted_at_utc_ms']!,
+          _deletedAtUtcMsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CalorieEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CalorieEntry(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      dateKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date_key'],
+      )!,
+      mealType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}meal_type'],
+      )!,
+      calories: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}calories'],
+      )!,
+      loggedAtUtcMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}logged_at_utc_ms'],
+      )!,
+      timezoneName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}timezone_name'],
+      )!,
+      revision: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}revision'],
+      )!,
+      updatedAtUtcMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_utc_ms'],
+      )!,
+      deletedAtUtcMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted_at_utc_ms'],
+      ),
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+    );
+  }
+
+  @override
+  $CalorieEntriesTable createAlias(String alias) {
+    return $CalorieEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class CalorieEntry extends DataClass implements Insertable<CalorieEntry> {
+  final String id;
+  final String dateKey;
+  final String mealType;
+  final int calories;
+  final int loggedAtUtcMs;
+  final String timezoneName;
+  final int revision;
+  final int updatedAtUtcMs;
+  final int? deletedAtUtcMs;
+  final String syncStatus;
+  const CalorieEntry({
+    required this.id,
+    required this.dateKey,
+    required this.mealType,
+    required this.calories,
+    required this.loggedAtUtcMs,
+    required this.timezoneName,
+    required this.revision,
+    required this.updatedAtUtcMs,
+    this.deletedAtUtcMs,
+    required this.syncStatus,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['date_key'] = Variable<String>(dateKey);
+    map['meal_type'] = Variable<String>(mealType);
+    map['calories'] = Variable<int>(calories);
+    map['logged_at_utc_ms'] = Variable<int>(loggedAtUtcMs);
+    map['timezone_name'] = Variable<String>(timezoneName);
+    map['revision'] = Variable<int>(revision);
+    map['updated_at_utc_ms'] = Variable<int>(updatedAtUtcMs);
+    if (!nullToAbsent || deletedAtUtcMs != null) {
+      map['deleted_at_utc_ms'] = Variable<int>(deletedAtUtcMs);
+    }
+    map['sync_status'] = Variable<String>(syncStatus);
+    return map;
+  }
+
+  CalorieEntriesCompanion toCompanion(bool nullToAbsent) {
+    return CalorieEntriesCompanion(
+      id: Value(id),
+      dateKey: Value(dateKey),
+      mealType: Value(mealType),
+      calories: Value(calories),
+      loggedAtUtcMs: Value(loggedAtUtcMs),
+      timezoneName: Value(timezoneName),
+      revision: Value(revision),
+      updatedAtUtcMs: Value(updatedAtUtcMs),
+      deletedAtUtcMs: deletedAtUtcMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAtUtcMs),
+      syncStatus: Value(syncStatus),
+    );
+  }
+
+  factory CalorieEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CalorieEntry(
+      id: serializer.fromJson<String>(json['id']),
+      dateKey: serializer.fromJson<String>(json['dateKey']),
+      mealType: serializer.fromJson<String>(json['mealType']),
+      calories: serializer.fromJson<int>(json['calories']),
+      loggedAtUtcMs: serializer.fromJson<int>(json['loggedAtUtcMs']),
+      timezoneName: serializer.fromJson<String>(json['timezoneName']),
+      revision: serializer.fromJson<int>(json['revision']),
+      updatedAtUtcMs: serializer.fromJson<int>(json['updatedAtUtcMs']),
+      deletedAtUtcMs: serializer.fromJson<int?>(json['deletedAtUtcMs']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'dateKey': serializer.toJson<String>(dateKey),
+      'mealType': serializer.toJson<String>(mealType),
+      'calories': serializer.toJson<int>(calories),
+      'loggedAtUtcMs': serializer.toJson<int>(loggedAtUtcMs),
+      'timezoneName': serializer.toJson<String>(timezoneName),
+      'revision': serializer.toJson<int>(revision),
+      'updatedAtUtcMs': serializer.toJson<int>(updatedAtUtcMs),
+      'deletedAtUtcMs': serializer.toJson<int?>(deletedAtUtcMs),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+    };
+  }
+
+  CalorieEntry copyWith({
+    String? id,
+    String? dateKey,
+    String? mealType,
+    int? calories,
+    int? loggedAtUtcMs,
+    String? timezoneName,
+    int? revision,
+    int? updatedAtUtcMs,
+    Value<int?> deletedAtUtcMs = const Value.absent(),
+    String? syncStatus,
+  }) => CalorieEntry(
+    id: id ?? this.id,
+    dateKey: dateKey ?? this.dateKey,
+    mealType: mealType ?? this.mealType,
+    calories: calories ?? this.calories,
+    loggedAtUtcMs: loggedAtUtcMs ?? this.loggedAtUtcMs,
+    timezoneName: timezoneName ?? this.timezoneName,
+    revision: revision ?? this.revision,
+    updatedAtUtcMs: updatedAtUtcMs ?? this.updatedAtUtcMs,
+    deletedAtUtcMs: deletedAtUtcMs.present
+        ? deletedAtUtcMs.value
+        : this.deletedAtUtcMs,
+    syncStatus: syncStatus ?? this.syncStatus,
+  );
+  CalorieEntry copyWithCompanion(CalorieEntriesCompanion data) {
+    return CalorieEntry(
+      id: data.id.present ? data.id.value : this.id,
+      dateKey: data.dateKey.present ? data.dateKey.value : this.dateKey,
+      mealType: data.mealType.present ? data.mealType.value : this.mealType,
+      calories: data.calories.present ? data.calories.value : this.calories,
+      loggedAtUtcMs: data.loggedAtUtcMs.present
+          ? data.loggedAtUtcMs.value
+          : this.loggedAtUtcMs,
+      timezoneName: data.timezoneName.present
+          ? data.timezoneName.value
+          : this.timezoneName,
+      revision: data.revision.present ? data.revision.value : this.revision,
+      updatedAtUtcMs: data.updatedAtUtcMs.present
+          ? data.updatedAtUtcMs.value
+          : this.updatedAtUtcMs,
+      deletedAtUtcMs: data.deletedAtUtcMs.present
+          ? data.deletedAtUtcMs.value
+          : this.deletedAtUtcMs,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CalorieEntry(')
+          ..write('id: $id, ')
+          ..write('dateKey: $dateKey, ')
+          ..write('mealType: $mealType, ')
+          ..write('calories: $calories, ')
+          ..write('loggedAtUtcMs: $loggedAtUtcMs, ')
+          ..write('timezoneName: $timezoneName, ')
+          ..write('revision: $revision, ')
+          ..write('updatedAtUtcMs: $updatedAtUtcMs, ')
+          ..write('deletedAtUtcMs: $deletedAtUtcMs, ')
+          ..write('syncStatus: $syncStatus')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    dateKey,
+    mealType,
+    calories,
+    loggedAtUtcMs,
+    timezoneName,
+    revision,
+    updatedAtUtcMs,
+    deletedAtUtcMs,
+    syncStatus,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CalorieEntry &&
+          other.id == this.id &&
+          other.dateKey == this.dateKey &&
+          other.mealType == this.mealType &&
+          other.calories == this.calories &&
+          other.loggedAtUtcMs == this.loggedAtUtcMs &&
+          other.timezoneName == this.timezoneName &&
+          other.revision == this.revision &&
+          other.updatedAtUtcMs == this.updatedAtUtcMs &&
+          other.deletedAtUtcMs == this.deletedAtUtcMs &&
+          other.syncStatus == this.syncStatus);
+}
+
+class CalorieEntriesCompanion extends UpdateCompanion<CalorieEntry> {
+  final Value<String> id;
+  final Value<String> dateKey;
+  final Value<String> mealType;
+  final Value<int> calories;
+  final Value<int> loggedAtUtcMs;
+  final Value<String> timezoneName;
+  final Value<int> revision;
+  final Value<int> updatedAtUtcMs;
+  final Value<int?> deletedAtUtcMs;
+  final Value<String> syncStatus;
+  final Value<int> rowid;
+  const CalorieEntriesCompanion({
+    this.id = const Value.absent(),
+    this.dateKey = const Value.absent(),
+    this.mealType = const Value.absent(),
+    this.calories = const Value.absent(),
+    this.loggedAtUtcMs = const Value.absent(),
+    this.timezoneName = const Value.absent(),
+    this.revision = const Value.absent(),
+    this.updatedAtUtcMs = const Value.absent(),
+    this.deletedAtUtcMs = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CalorieEntriesCompanion.insert({
+    required String id,
+    required String dateKey,
+    required String mealType,
+    required int calories,
+    required int loggedAtUtcMs,
+    this.timezoneName = const Value.absent(),
+    this.revision = const Value.absent(),
+    required int updatedAtUtcMs,
+    this.deletedAtUtcMs = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       dateKey = Value(dateKey),
+       mealType = Value(mealType),
+       calories = Value(calories),
+       loggedAtUtcMs = Value(loggedAtUtcMs),
+       updatedAtUtcMs = Value(updatedAtUtcMs);
+  static Insertable<CalorieEntry> custom({
+    Expression<String>? id,
+    Expression<String>? dateKey,
+    Expression<String>? mealType,
+    Expression<int>? calories,
+    Expression<int>? loggedAtUtcMs,
+    Expression<String>? timezoneName,
+    Expression<int>? revision,
+    Expression<int>? updatedAtUtcMs,
+    Expression<int>? deletedAtUtcMs,
+    Expression<String>? syncStatus,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (dateKey != null) 'date_key': dateKey,
+      if (mealType != null) 'meal_type': mealType,
+      if (calories != null) 'calories': calories,
+      if (loggedAtUtcMs != null) 'logged_at_utc_ms': loggedAtUtcMs,
+      if (timezoneName != null) 'timezone_name': timezoneName,
+      if (revision != null) 'revision': revision,
+      if (updatedAtUtcMs != null) 'updated_at_utc_ms': updatedAtUtcMs,
+      if (deletedAtUtcMs != null) 'deleted_at_utc_ms': deletedAtUtcMs,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CalorieEntriesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? dateKey,
+    Value<String>? mealType,
+    Value<int>? calories,
+    Value<int>? loggedAtUtcMs,
+    Value<String>? timezoneName,
+    Value<int>? revision,
+    Value<int>? updatedAtUtcMs,
+    Value<int?>? deletedAtUtcMs,
+    Value<String>? syncStatus,
+    Value<int>? rowid,
+  }) {
+    return CalorieEntriesCompanion(
+      id: id ?? this.id,
+      dateKey: dateKey ?? this.dateKey,
+      mealType: mealType ?? this.mealType,
+      calories: calories ?? this.calories,
+      loggedAtUtcMs: loggedAtUtcMs ?? this.loggedAtUtcMs,
+      timezoneName: timezoneName ?? this.timezoneName,
+      revision: revision ?? this.revision,
+      updatedAtUtcMs: updatedAtUtcMs ?? this.updatedAtUtcMs,
+      deletedAtUtcMs: deletedAtUtcMs ?? this.deletedAtUtcMs,
+      syncStatus: syncStatus ?? this.syncStatus,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (dateKey.present) {
+      map['date_key'] = Variable<String>(dateKey.value);
+    }
+    if (mealType.present) {
+      map['meal_type'] = Variable<String>(mealType.value);
+    }
+    if (calories.present) {
+      map['calories'] = Variable<int>(calories.value);
+    }
+    if (loggedAtUtcMs.present) {
+      map['logged_at_utc_ms'] = Variable<int>(loggedAtUtcMs.value);
+    }
+    if (timezoneName.present) {
+      map['timezone_name'] = Variable<String>(timezoneName.value);
+    }
+    if (revision.present) {
+      map['revision'] = Variable<int>(revision.value);
+    }
+    if (updatedAtUtcMs.present) {
+      map['updated_at_utc_ms'] = Variable<int>(updatedAtUtcMs.value);
+    }
+    if (deletedAtUtcMs.present) {
+      map['deleted_at_utc_ms'] = Variable<int>(deletedAtUtcMs.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CalorieEntriesCompanion(')
+          ..write('id: $id, ')
+          ..write('dateKey: $dateKey, ')
+          ..write('mealType: $mealType, ')
+          ..write('calories: $calories, ')
+          ..write('loggedAtUtcMs: $loggedAtUtcMs, ')
+          ..write('timezoneName: $timezoneName, ')
+          ..write('revision: $revision, ')
+          ..write('updatedAtUtcMs: $updatedAtUtcMs, ')
+          ..write('deletedAtUtcMs: $deletedAtUtcMs, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $DailyTasksTable extends DailyTasks
+    with TableInfo<$DailyTasksTable, DailyTask> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DailyTasksTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('custom'),
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _iconKeyMeta = const VerificationMeta(
+    'iconKey',
+  );
+  @override
+  late final GeneratedColumn<String> iconKey = GeneratedColumn<String>(
+    'icon_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _colorKeyMeta = const VerificationMeta(
+    'colorKey',
+  );
+  @override
+  late final GeneratedColumn<String> colorKey = GeneratedColumn<String>(
+    'color_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _goalTypeMeta = const VerificationMeta(
+    'goalType',
+  );
+  @override
+  late final GeneratedColumn<String> goalType = GeneratedColumn<String>(
+    'goal_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _targetValueMeta = const VerificationMeta(
+    'targetValue',
+  );
+  @override
+  late final GeneratedColumn<double> targetValue = GeneratedColumn<double>(
+    'target_value',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+    'unit',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quickIncrementMeta = const VerificationMeta(
+    'quickIncrement',
+  );
+  @override
+  late final GeneratedColumn<double> quickIncrement = GeneratedColumn<double>(
+    'quick_increment',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _weekdaysMaskMeta = const VerificationMeta(
+    'weekdaysMask',
+  );
+  @override
+  late final GeneratedColumn<int> weekdaysMask = GeneratedColumn<int>(
+    'weekdays_mask',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(127),
+  );
+  static const VerificationMeta _reminderMinuteMeta = const VerificationMeta(
+    'reminderMinute',
+  );
+  @override
+  late final GeneratedColumn<int> reminderMinute = GeneratedColumn<int>(
+    'reminder_minute',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _enabledMeta = const VerificationMeta(
+    'enabled',
+  );
+  @override
+  late final GeneratedColumn<bool> enabled = GeneratedColumn<bool>(
+    'enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _createdAtUtcMsMeta = const VerificationMeta(
+    'createdAtUtcMs',
+  );
+  @override
+  late final GeneratedColumn<int> createdAtUtcMs = GeneratedColumn<int>(
+    'created_at_utc_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _revisionMeta = const VerificationMeta(
+    'revision',
+  );
+  @override
+  late final GeneratedColumn<int> revision = GeneratedColumn<int>(
+    'revision',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _updatedAtUtcMsMeta = const VerificationMeta(
+    'updatedAtUtcMs',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAtUtcMs = GeneratedColumn<int>(
+    'updated_at_utc_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtUtcMsMeta = const VerificationMeta(
+    'deletedAtUtcMs',
+  );
+  @override
+  late final GeneratedColumn<int> deletedAtUtcMs = GeneratedColumn<int>(
+    'deleted_at_utc_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    kind,
+    title,
+    iconKey,
+    colorKey,
+    goalType,
+    targetValue,
+    unit,
+    quickIncrement,
+    weekdaysMask,
+    reminderMinute,
+    sortOrder,
+    enabled,
+    createdAtUtcMs,
+    revision,
+    updatedAtUtcMs,
+    deletedAtUtcMs,
+    syncStatus,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'daily_tasks';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DailyTask> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('icon_key')) {
+      context.handle(
+        _iconKeyMeta,
+        iconKey.isAcceptableOrUnknown(data['icon_key']!, _iconKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_iconKeyMeta);
+    }
+    if (data.containsKey('color_key')) {
+      context.handle(
+        _colorKeyMeta,
+        colorKey.isAcceptableOrUnknown(data['color_key']!, _colorKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_colorKeyMeta);
+    }
+    if (data.containsKey('goal_type')) {
+      context.handle(
+        _goalTypeMeta,
+        goalType.isAcceptableOrUnknown(data['goal_type']!, _goalTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_goalTypeMeta);
+    }
+    if (data.containsKey('target_value')) {
+      context.handle(
+        _targetValueMeta,
+        targetValue.isAcceptableOrUnknown(
+          data['target_value']!,
+          _targetValueMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_targetValueMeta);
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+        _unitMeta,
+        unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_unitMeta);
+    }
+    if (data.containsKey('quick_increment')) {
+      context.handle(
+        _quickIncrementMeta,
+        quickIncrement.isAcceptableOrUnknown(
+          data['quick_increment']!,
+          _quickIncrementMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_quickIncrementMeta);
+    }
+    if (data.containsKey('weekdays_mask')) {
+      context.handle(
+        _weekdaysMaskMeta,
+        weekdaysMask.isAcceptableOrUnknown(
+          data['weekdays_mask']!,
+          _weekdaysMaskMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reminder_minute')) {
+      context.handle(
+        _reminderMinuteMeta,
+        reminderMinute.isAcceptableOrUnknown(
+          data['reminder_minute']!,
+          _reminderMinuteMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('enabled')) {
+      context.handle(
+        _enabledMeta,
+        enabled.isAcceptableOrUnknown(data['enabled']!, _enabledMeta),
+      );
+    }
+    if (data.containsKey('created_at_utc_ms')) {
+      context.handle(
+        _createdAtUtcMsMeta,
+        createdAtUtcMs.isAcceptableOrUnknown(
+          data['created_at_utc_ms']!,
+          _createdAtUtcMsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtUtcMsMeta);
+    }
+    if (data.containsKey('revision')) {
+      context.handle(
+        _revisionMeta,
+        revision.isAcceptableOrUnknown(data['revision']!, _revisionMeta),
+      );
+    }
+    if (data.containsKey('updated_at_utc_ms')) {
+      context.handle(
+        _updatedAtUtcMsMeta,
+        updatedAtUtcMs.isAcceptableOrUnknown(
+          data['updated_at_utc_ms']!,
+          _updatedAtUtcMsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtUtcMsMeta);
+    }
+    if (data.containsKey('deleted_at_utc_ms')) {
+      context.handle(
+        _deletedAtUtcMsMeta,
+        deletedAtUtcMs.isAcceptableOrUnknown(
+          data['deleted_at_utc_ms']!,
+          _deletedAtUtcMsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DailyTask map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DailyTask(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      iconKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon_key'],
+      )!,
+      colorKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}color_key'],
+      )!,
+      goalType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}goal_type'],
+      )!,
+      targetValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}target_value'],
+      )!,
+      unit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit'],
+      )!,
+      quickIncrement: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}quick_increment'],
+      )!,
+      weekdaysMask: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}weekdays_mask'],
+      )!,
+      reminderMinute: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reminder_minute'],
+      ),
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      enabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}enabled'],
+      )!,
+      createdAtUtcMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_utc_ms'],
+      )!,
+      revision: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}revision'],
+      )!,
+      updatedAtUtcMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_utc_ms'],
+      )!,
+      deletedAtUtcMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted_at_utc_ms'],
+      ),
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+    );
+  }
+
+  @override
+  $DailyTasksTable createAlias(String alias) {
+    return $DailyTasksTable(attachedDatabase, alias);
+  }
+}
+
+class DailyTask extends DataClass implements Insertable<DailyTask> {
+  final String id;
+  final String kind;
+  final String title;
+  final String iconKey;
+  final String colorKey;
+  final String goalType;
+  final double targetValue;
+  final String unit;
+  final double quickIncrement;
+  final int weekdaysMask;
+  final int? reminderMinute;
+  final int sortOrder;
+  final bool enabled;
+  final int createdAtUtcMs;
+  final int revision;
+  final int updatedAtUtcMs;
+  final int? deletedAtUtcMs;
+  final String syncStatus;
+  const DailyTask({
+    required this.id,
+    required this.kind,
+    required this.title,
+    required this.iconKey,
+    required this.colorKey,
+    required this.goalType,
+    required this.targetValue,
+    required this.unit,
+    required this.quickIncrement,
+    required this.weekdaysMask,
+    this.reminderMinute,
+    required this.sortOrder,
+    required this.enabled,
+    required this.createdAtUtcMs,
+    required this.revision,
+    required this.updatedAtUtcMs,
+    this.deletedAtUtcMs,
+    required this.syncStatus,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['kind'] = Variable<String>(kind);
+    map['title'] = Variable<String>(title);
+    map['icon_key'] = Variable<String>(iconKey);
+    map['color_key'] = Variable<String>(colorKey);
+    map['goal_type'] = Variable<String>(goalType);
+    map['target_value'] = Variable<double>(targetValue);
+    map['unit'] = Variable<String>(unit);
+    map['quick_increment'] = Variable<double>(quickIncrement);
+    map['weekdays_mask'] = Variable<int>(weekdaysMask);
+    if (!nullToAbsent || reminderMinute != null) {
+      map['reminder_minute'] = Variable<int>(reminderMinute);
+    }
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['enabled'] = Variable<bool>(enabled);
+    map['created_at_utc_ms'] = Variable<int>(createdAtUtcMs);
+    map['revision'] = Variable<int>(revision);
+    map['updated_at_utc_ms'] = Variable<int>(updatedAtUtcMs);
+    if (!nullToAbsent || deletedAtUtcMs != null) {
+      map['deleted_at_utc_ms'] = Variable<int>(deletedAtUtcMs);
+    }
+    map['sync_status'] = Variable<String>(syncStatus);
+    return map;
+  }
+
+  DailyTasksCompanion toCompanion(bool nullToAbsent) {
+    return DailyTasksCompanion(
+      id: Value(id),
+      kind: Value(kind),
+      title: Value(title),
+      iconKey: Value(iconKey),
+      colorKey: Value(colorKey),
+      goalType: Value(goalType),
+      targetValue: Value(targetValue),
+      unit: Value(unit),
+      quickIncrement: Value(quickIncrement),
+      weekdaysMask: Value(weekdaysMask),
+      reminderMinute: reminderMinute == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reminderMinute),
+      sortOrder: Value(sortOrder),
+      enabled: Value(enabled),
+      createdAtUtcMs: Value(createdAtUtcMs),
+      revision: Value(revision),
+      updatedAtUtcMs: Value(updatedAtUtcMs),
+      deletedAtUtcMs: deletedAtUtcMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAtUtcMs),
+      syncStatus: Value(syncStatus),
+    );
+  }
+
+  factory DailyTask.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DailyTask(
+      id: serializer.fromJson<String>(json['id']),
+      kind: serializer.fromJson<String>(json['kind']),
+      title: serializer.fromJson<String>(json['title']),
+      iconKey: serializer.fromJson<String>(json['iconKey']),
+      colorKey: serializer.fromJson<String>(json['colorKey']),
+      goalType: serializer.fromJson<String>(json['goalType']),
+      targetValue: serializer.fromJson<double>(json['targetValue']),
+      unit: serializer.fromJson<String>(json['unit']),
+      quickIncrement: serializer.fromJson<double>(json['quickIncrement']),
+      weekdaysMask: serializer.fromJson<int>(json['weekdaysMask']),
+      reminderMinute: serializer.fromJson<int?>(json['reminderMinute']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      enabled: serializer.fromJson<bool>(json['enabled']),
+      createdAtUtcMs: serializer.fromJson<int>(json['createdAtUtcMs']),
+      revision: serializer.fromJson<int>(json['revision']),
+      updatedAtUtcMs: serializer.fromJson<int>(json['updatedAtUtcMs']),
+      deletedAtUtcMs: serializer.fromJson<int?>(json['deletedAtUtcMs']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'kind': serializer.toJson<String>(kind),
+      'title': serializer.toJson<String>(title),
+      'iconKey': serializer.toJson<String>(iconKey),
+      'colorKey': serializer.toJson<String>(colorKey),
+      'goalType': serializer.toJson<String>(goalType),
+      'targetValue': serializer.toJson<double>(targetValue),
+      'unit': serializer.toJson<String>(unit),
+      'quickIncrement': serializer.toJson<double>(quickIncrement),
+      'weekdaysMask': serializer.toJson<int>(weekdaysMask),
+      'reminderMinute': serializer.toJson<int?>(reminderMinute),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'enabled': serializer.toJson<bool>(enabled),
+      'createdAtUtcMs': serializer.toJson<int>(createdAtUtcMs),
+      'revision': serializer.toJson<int>(revision),
+      'updatedAtUtcMs': serializer.toJson<int>(updatedAtUtcMs),
+      'deletedAtUtcMs': serializer.toJson<int?>(deletedAtUtcMs),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+    };
+  }
+
+  DailyTask copyWith({
+    String? id,
+    String? kind,
+    String? title,
+    String? iconKey,
+    String? colorKey,
+    String? goalType,
+    double? targetValue,
+    String? unit,
+    double? quickIncrement,
+    int? weekdaysMask,
+    Value<int?> reminderMinute = const Value.absent(),
+    int? sortOrder,
+    bool? enabled,
+    int? createdAtUtcMs,
+    int? revision,
+    int? updatedAtUtcMs,
+    Value<int?> deletedAtUtcMs = const Value.absent(),
+    String? syncStatus,
+  }) => DailyTask(
+    id: id ?? this.id,
+    kind: kind ?? this.kind,
+    title: title ?? this.title,
+    iconKey: iconKey ?? this.iconKey,
+    colorKey: colorKey ?? this.colorKey,
+    goalType: goalType ?? this.goalType,
+    targetValue: targetValue ?? this.targetValue,
+    unit: unit ?? this.unit,
+    quickIncrement: quickIncrement ?? this.quickIncrement,
+    weekdaysMask: weekdaysMask ?? this.weekdaysMask,
+    reminderMinute: reminderMinute.present
+        ? reminderMinute.value
+        : this.reminderMinute,
+    sortOrder: sortOrder ?? this.sortOrder,
+    enabled: enabled ?? this.enabled,
+    createdAtUtcMs: createdAtUtcMs ?? this.createdAtUtcMs,
+    revision: revision ?? this.revision,
+    updatedAtUtcMs: updatedAtUtcMs ?? this.updatedAtUtcMs,
+    deletedAtUtcMs: deletedAtUtcMs.present
+        ? deletedAtUtcMs.value
+        : this.deletedAtUtcMs,
+    syncStatus: syncStatus ?? this.syncStatus,
+  );
+  DailyTask copyWithCompanion(DailyTasksCompanion data) {
+    return DailyTask(
+      id: data.id.present ? data.id.value : this.id,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      title: data.title.present ? data.title.value : this.title,
+      iconKey: data.iconKey.present ? data.iconKey.value : this.iconKey,
+      colorKey: data.colorKey.present ? data.colorKey.value : this.colorKey,
+      goalType: data.goalType.present ? data.goalType.value : this.goalType,
+      targetValue: data.targetValue.present
+          ? data.targetValue.value
+          : this.targetValue,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      quickIncrement: data.quickIncrement.present
+          ? data.quickIncrement.value
+          : this.quickIncrement,
+      weekdaysMask: data.weekdaysMask.present
+          ? data.weekdaysMask.value
+          : this.weekdaysMask,
+      reminderMinute: data.reminderMinute.present
+          ? data.reminderMinute.value
+          : this.reminderMinute,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      enabled: data.enabled.present ? data.enabled.value : this.enabled,
+      createdAtUtcMs: data.createdAtUtcMs.present
+          ? data.createdAtUtcMs.value
+          : this.createdAtUtcMs,
+      revision: data.revision.present ? data.revision.value : this.revision,
+      updatedAtUtcMs: data.updatedAtUtcMs.present
+          ? data.updatedAtUtcMs.value
+          : this.updatedAtUtcMs,
+      deletedAtUtcMs: data.deletedAtUtcMs.present
+          ? data.deletedAtUtcMs.value
+          : this.deletedAtUtcMs,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyTask(')
+          ..write('id: $id, ')
+          ..write('kind: $kind, ')
+          ..write('title: $title, ')
+          ..write('iconKey: $iconKey, ')
+          ..write('colorKey: $colorKey, ')
+          ..write('goalType: $goalType, ')
+          ..write('targetValue: $targetValue, ')
+          ..write('unit: $unit, ')
+          ..write('quickIncrement: $quickIncrement, ')
+          ..write('weekdaysMask: $weekdaysMask, ')
+          ..write('reminderMinute: $reminderMinute, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('enabled: $enabled, ')
+          ..write('createdAtUtcMs: $createdAtUtcMs, ')
+          ..write('revision: $revision, ')
+          ..write('updatedAtUtcMs: $updatedAtUtcMs, ')
+          ..write('deletedAtUtcMs: $deletedAtUtcMs, ')
+          ..write('syncStatus: $syncStatus')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    kind,
+    title,
+    iconKey,
+    colorKey,
+    goalType,
+    targetValue,
+    unit,
+    quickIncrement,
+    weekdaysMask,
+    reminderMinute,
+    sortOrder,
+    enabled,
+    createdAtUtcMs,
+    revision,
+    updatedAtUtcMs,
+    deletedAtUtcMs,
+    syncStatus,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DailyTask &&
+          other.id == this.id &&
+          other.kind == this.kind &&
+          other.title == this.title &&
+          other.iconKey == this.iconKey &&
+          other.colorKey == this.colorKey &&
+          other.goalType == this.goalType &&
+          other.targetValue == this.targetValue &&
+          other.unit == this.unit &&
+          other.quickIncrement == this.quickIncrement &&
+          other.weekdaysMask == this.weekdaysMask &&
+          other.reminderMinute == this.reminderMinute &&
+          other.sortOrder == this.sortOrder &&
+          other.enabled == this.enabled &&
+          other.createdAtUtcMs == this.createdAtUtcMs &&
+          other.revision == this.revision &&
+          other.updatedAtUtcMs == this.updatedAtUtcMs &&
+          other.deletedAtUtcMs == this.deletedAtUtcMs &&
+          other.syncStatus == this.syncStatus);
+}
+
+class DailyTasksCompanion extends UpdateCompanion<DailyTask> {
+  final Value<String> id;
+  final Value<String> kind;
+  final Value<String> title;
+  final Value<String> iconKey;
+  final Value<String> colorKey;
+  final Value<String> goalType;
+  final Value<double> targetValue;
+  final Value<String> unit;
+  final Value<double> quickIncrement;
+  final Value<int> weekdaysMask;
+  final Value<int?> reminderMinute;
+  final Value<int> sortOrder;
+  final Value<bool> enabled;
+  final Value<int> createdAtUtcMs;
+  final Value<int> revision;
+  final Value<int> updatedAtUtcMs;
+  final Value<int?> deletedAtUtcMs;
+  final Value<String> syncStatus;
+  final Value<int> rowid;
+  const DailyTasksCompanion({
+    this.id = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.title = const Value.absent(),
+    this.iconKey = const Value.absent(),
+    this.colorKey = const Value.absent(),
+    this.goalType = const Value.absent(),
+    this.targetValue = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.quickIncrement = const Value.absent(),
+    this.weekdaysMask = const Value.absent(),
+    this.reminderMinute = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.enabled = const Value.absent(),
+    this.createdAtUtcMs = const Value.absent(),
+    this.revision = const Value.absent(),
+    this.updatedAtUtcMs = const Value.absent(),
+    this.deletedAtUtcMs = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DailyTasksCompanion.insert({
+    required String id,
+    this.kind = const Value.absent(),
+    required String title,
+    required String iconKey,
+    required String colorKey,
+    required String goalType,
+    required double targetValue,
+    required String unit,
+    required double quickIncrement,
+    this.weekdaysMask = const Value.absent(),
+    this.reminderMinute = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.enabled = const Value.absent(),
+    required int createdAtUtcMs,
+    this.revision = const Value.absent(),
+    required int updatedAtUtcMs,
+    this.deletedAtUtcMs = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       title = Value(title),
+       iconKey = Value(iconKey),
+       colorKey = Value(colorKey),
+       goalType = Value(goalType),
+       targetValue = Value(targetValue),
+       unit = Value(unit),
+       quickIncrement = Value(quickIncrement),
+       createdAtUtcMs = Value(createdAtUtcMs),
+       updatedAtUtcMs = Value(updatedAtUtcMs);
+  static Insertable<DailyTask> custom({
+    Expression<String>? id,
+    Expression<String>? kind,
+    Expression<String>? title,
+    Expression<String>? iconKey,
+    Expression<String>? colorKey,
+    Expression<String>? goalType,
+    Expression<double>? targetValue,
+    Expression<String>? unit,
+    Expression<double>? quickIncrement,
+    Expression<int>? weekdaysMask,
+    Expression<int>? reminderMinute,
+    Expression<int>? sortOrder,
+    Expression<bool>? enabled,
+    Expression<int>? createdAtUtcMs,
+    Expression<int>? revision,
+    Expression<int>? updatedAtUtcMs,
+    Expression<int>? deletedAtUtcMs,
+    Expression<String>? syncStatus,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (kind != null) 'kind': kind,
+      if (title != null) 'title': title,
+      if (iconKey != null) 'icon_key': iconKey,
+      if (colorKey != null) 'color_key': colorKey,
+      if (goalType != null) 'goal_type': goalType,
+      if (targetValue != null) 'target_value': targetValue,
+      if (unit != null) 'unit': unit,
+      if (quickIncrement != null) 'quick_increment': quickIncrement,
+      if (weekdaysMask != null) 'weekdays_mask': weekdaysMask,
+      if (reminderMinute != null) 'reminder_minute': reminderMinute,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (enabled != null) 'enabled': enabled,
+      if (createdAtUtcMs != null) 'created_at_utc_ms': createdAtUtcMs,
+      if (revision != null) 'revision': revision,
+      if (updatedAtUtcMs != null) 'updated_at_utc_ms': updatedAtUtcMs,
+      if (deletedAtUtcMs != null) 'deleted_at_utc_ms': deletedAtUtcMs,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DailyTasksCompanion copyWith({
+    Value<String>? id,
+    Value<String>? kind,
+    Value<String>? title,
+    Value<String>? iconKey,
+    Value<String>? colorKey,
+    Value<String>? goalType,
+    Value<double>? targetValue,
+    Value<String>? unit,
+    Value<double>? quickIncrement,
+    Value<int>? weekdaysMask,
+    Value<int?>? reminderMinute,
+    Value<int>? sortOrder,
+    Value<bool>? enabled,
+    Value<int>? createdAtUtcMs,
+    Value<int>? revision,
+    Value<int>? updatedAtUtcMs,
+    Value<int?>? deletedAtUtcMs,
+    Value<String>? syncStatus,
+    Value<int>? rowid,
+  }) {
+    return DailyTasksCompanion(
+      id: id ?? this.id,
+      kind: kind ?? this.kind,
+      title: title ?? this.title,
+      iconKey: iconKey ?? this.iconKey,
+      colorKey: colorKey ?? this.colorKey,
+      goalType: goalType ?? this.goalType,
+      targetValue: targetValue ?? this.targetValue,
+      unit: unit ?? this.unit,
+      quickIncrement: quickIncrement ?? this.quickIncrement,
+      weekdaysMask: weekdaysMask ?? this.weekdaysMask,
+      reminderMinute: reminderMinute ?? this.reminderMinute,
+      sortOrder: sortOrder ?? this.sortOrder,
+      enabled: enabled ?? this.enabled,
+      createdAtUtcMs: createdAtUtcMs ?? this.createdAtUtcMs,
+      revision: revision ?? this.revision,
+      updatedAtUtcMs: updatedAtUtcMs ?? this.updatedAtUtcMs,
+      deletedAtUtcMs: deletedAtUtcMs ?? this.deletedAtUtcMs,
+      syncStatus: syncStatus ?? this.syncStatus,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (iconKey.present) {
+      map['icon_key'] = Variable<String>(iconKey.value);
+    }
+    if (colorKey.present) {
+      map['color_key'] = Variable<String>(colorKey.value);
+    }
+    if (goalType.present) {
+      map['goal_type'] = Variable<String>(goalType.value);
+    }
+    if (targetValue.present) {
+      map['target_value'] = Variable<double>(targetValue.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (quickIncrement.present) {
+      map['quick_increment'] = Variable<double>(quickIncrement.value);
+    }
+    if (weekdaysMask.present) {
+      map['weekdays_mask'] = Variable<int>(weekdaysMask.value);
+    }
+    if (reminderMinute.present) {
+      map['reminder_minute'] = Variable<int>(reminderMinute.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (enabled.present) {
+      map['enabled'] = Variable<bool>(enabled.value);
+    }
+    if (createdAtUtcMs.present) {
+      map['created_at_utc_ms'] = Variable<int>(createdAtUtcMs.value);
+    }
+    if (revision.present) {
+      map['revision'] = Variable<int>(revision.value);
+    }
+    if (updatedAtUtcMs.present) {
+      map['updated_at_utc_ms'] = Variable<int>(updatedAtUtcMs.value);
+    }
+    if (deletedAtUtcMs.present) {
+      map['deleted_at_utc_ms'] = Variable<int>(deletedAtUtcMs.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyTasksCompanion(')
+          ..write('id: $id, ')
+          ..write('kind: $kind, ')
+          ..write('title: $title, ')
+          ..write('iconKey: $iconKey, ')
+          ..write('colorKey: $colorKey, ')
+          ..write('goalType: $goalType, ')
+          ..write('targetValue: $targetValue, ')
+          ..write('unit: $unit, ')
+          ..write('quickIncrement: $quickIncrement, ')
+          ..write('weekdaysMask: $weekdaysMask, ')
+          ..write('reminderMinute: $reminderMinute, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('enabled: $enabled, ')
+          ..write('createdAtUtcMs: $createdAtUtcMs, ')
+          ..write('revision: $revision, ')
+          ..write('updatedAtUtcMs: $updatedAtUtcMs, ')
+          ..write('deletedAtUtcMs: $deletedAtUtcMs, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TaskProgressEntriesTable extends TaskProgressEntries
+    with TableInfo<$TaskProgressEntriesTable, TaskProgressEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TaskProgressEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _taskIdMeta = const VerificationMeta('taskId');
+  @override
+  late final GeneratedColumn<String> taskId = GeneratedColumn<String>(
+    'task_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES daily_tasks (id)',
+    ),
+  );
+  static const VerificationMeta _dateKeyMeta = const VerificationMeta(
+    'dateKey',
+  );
+  @override
+  late final GeneratedColumn<String> dateKey = GeneratedColumn<String>(
+    'date_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deltaValueMeta = const VerificationMeta(
+    'deltaValue',
+  );
+  @override
+  late final GeneratedColumn<double> deltaValue = GeneratedColumn<double>(
+    'delta_value',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _goalSnapshotMeta = const VerificationMeta(
+    'goalSnapshot',
+  );
+  @override
+  late final GeneratedColumn<double> goalSnapshot = GeneratedColumn<double>(
+    'goal_snapshot',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unitSnapshotMeta = const VerificationMeta(
+    'unitSnapshot',
+  );
+  @override
+  late final GeneratedColumn<String> unitSnapshot = GeneratedColumn<String>(
+    'unit_snapshot',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _loggedAtUtcMsMeta = const VerificationMeta(
+    'loggedAtUtcMs',
+  );
+  @override
+  late final GeneratedColumn<int> loggedAtUtcMs = GeneratedColumn<int>(
+    'logged_at_utc_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _timezoneNameMeta = const VerificationMeta(
+    'timezoneName',
+  );
+  @override
+  late final GeneratedColumn<String> timezoneName = GeneratedColumn<String>(
+    'timezone_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('UTC'),
+  );
+  static const VerificationMeta _revisionMeta = const VerificationMeta(
+    'revision',
+  );
+  @override
+  late final GeneratedColumn<int> revision = GeneratedColumn<int>(
+    'revision',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _updatedAtUtcMsMeta = const VerificationMeta(
+    'updatedAtUtcMs',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAtUtcMs = GeneratedColumn<int>(
+    'updated_at_utc_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtUtcMsMeta = const VerificationMeta(
+    'deletedAtUtcMs',
+  );
+  @override
+  late final GeneratedColumn<int> deletedAtUtcMs = GeneratedColumn<int>(
+    'deleted_at_utc_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    taskId,
+    dateKey,
+    deltaValue,
+    goalSnapshot,
+    unitSnapshot,
+    loggedAtUtcMs,
+    timezoneName,
+    revision,
+    updatedAtUtcMs,
+    deletedAtUtcMs,
+    syncStatus,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'task_progress_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TaskProgressEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('task_id')) {
+      context.handle(
+        _taskIdMeta,
+        taskId.isAcceptableOrUnknown(data['task_id']!, _taskIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_taskIdMeta);
+    }
+    if (data.containsKey('date_key')) {
+      context.handle(
+        _dateKeyMeta,
+        dateKey.isAcceptableOrUnknown(data['date_key']!, _dateKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateKeyMeta);
+    }
+    if (data.containsKey('delta_value')) {
+      context.handle(
+        _deltaValueMeta,
+        deltaValue.isAcceptableOrUnknown(data['delta_value']!, _deltaValueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deltaValueMeta);
+    }
+    if (data.containsKey('goal_snapshot')) {
+      context.handle(
+        _goalSnapshotMeta,
+        goalSnapshot.isAcceptableOrUnknown(
+          data['goal_snapshot']!,
+          _goalSnapshotMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_goalSnapshotMeta);
+    }
+    if (data.containsKey('unit_snapshot')) {
+      context.handle(
+        _unitSnapshotMeta,
+        unitSnapshot.isAcceptableOrUnknown(
+          data['unit_snapshot']!,
+          _unitSnapshotMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_unitSnapshotMeta);
+    }
+    if (data.containsKey('logged_at_utc_ms')) {
+      context.handle(
+        _loggedAtUtcMsMeta,
+        loggedAtUtcMs.isAcceptableOrUnknown(
+          data['logged_at_utc_ms']!,
+          _loggedAtUtcMsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_loggedAtUtcMsMeta);
+    }
+    if (data.containsKey('timezone_name')) {
+      context.handle(
+        _timezoneNameMeta,
+        timezoneName.isAcceptableOrUnknown(
+          data['timezone_name']!,
+          _timezoneNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('revision')) {
+      context.handle(
+        _revisionMeta,
+        revision.isAcceptableOrUnknown(data['revision']!, _revisionMeta),
+      );
+    }
+    if (data.containsKey('updated_at_utc_ms')) {
+      context.handle(
+        _updatedAtUtcMsMeta,
+        updatedAtUtcMs.isAcceptableOrUnknown(
+          data['updated_at_utc_ms']!,
+          _updatedAtUtcMsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtUtcMsMeta);
+    }
+    if (data.containsKey('deleted_at_utc_ms')) {
+      context.handle(
+        _deletedAtUtcMsMeta,
+        deletedAtUtcMs.isAcceptableOrUnknown(
+          data['deleted_at_utc_ms']!,
+          _deletedAtUtcMsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TaskProgressEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TaskProgressEntry(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      taskId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}task_id'],
+      )!,
+      dateKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date_key'],
+      )!,
+      deltaValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}delta_value'],
+      )!,
+      goalSnapshot: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}goal_snapshot'],
+      )!,
+      unitSnapshot: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit_snapshot'],
+      )!,
+      loggedAtUtcMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}logged_at_utc_ms'],
+      )!,
+      timezoneName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}timezone_name'],
+      )!,
+      revision: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}revision'],
+      )!,
+      updatedAtUtcMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_utc_ms'],
+      )!,
+      deletedAtUtcMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted_at_utc_ms'],
+      ),
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+    );
+  }
+
+  @override
+  $TaskProgressEntriesTable createAlias(String alias) {
+    return $TaskProgressEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class TaskProgressEntry extends DataClass
+    implements Insertable<TaskProgressEntry> {
+  final String id;
+  final String taskId;
+  final String dateKey;
+  final double deltaValue;
+  final double goalSnapshot;
+  final String unitSnapshot;
+  final int loggedAtUtcMs;
+  final String timezoneName;
+  final int revision;
+  final int updatedAtUtcMs;
+  final int? deletedAtUtcMs;
+  final String syncStatus;
+  const TaskProgressEntry({
+    required this.id,
+    required this.taskId,
+    required this.dateKey,
+    required this.deltaValue,
+    required this.goalSnapshot,
+    required this.unitSnapshot,
+    required this.loggedAtUtcMs,
+    required this.timezoneName,
+    required this.revision,
+    required this.updatedAtUtcMs,
+    this.deletedAtUtcMs,
+    required this.syncStatus,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['task_id'] = Variable<String>(taskId);
+    map['date_key'] = Variable<String>(dateKey);
+    map['delta_value'] = Variable<double>(deltaValue);
+    map['goal_snapshot'] = Variable<double>(goalSnapshot);
+    map['unit_snapshot'] = Variable<String>(unitSnapshot);
+    map['logged_at_utc_ms'] = Variable<int>(loggedAtUtcMs);
+    map['timezone_name'] = Variable<String>(timezoneName);
+    map['revision'] = Variable<int>(revision);
+    map['updated_at_utc_ms'] = Variable<int>(updatedAtUtcMs);
+    if (!nullToAbsent || deletedAtUtcMs != null) {
+      map['deleted_at_utc_ms'] = Variable<int>(deletedAtUtcMs);
+    }
+    map['sync_status'] = Variable<String>(syncStatus);
+    return map;
+  }
+
+  TaskProgressEntriesCompanion toCompanion(bool nullToAbsent) {
+    return TaskProgressEntriesCompanion(
+      id: Value(id),
+      taskId: Value(taskId),
+      dateKey: Value(dateKey),
+      deltaValue: Value(deltaValue),
+      goalSnapshot: Value(goalSnapshot),
+      unitSnapshot: Value(unitSnapshot),
+      loggedAtUtcMs: Value(loggedAtUtcMs),
+      timezoneName: Value(timezoneName),
+      revision: Value(revision),
+      updatedAtUtcMs: Value(updatedAtUtcMs),
+      deletedAtUtcMs: deletedAtUtcMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAtUtcMs),
+      syncStatus: Value(syncStatus),
+    );
+  }
+
+  factory TaskProgressEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TaskProgressEntry(
+      id: serializer.fromJson<String>(json['id']),
+      taskId: serializer.fromJson<String>(json['taskId']),
+      dateKey: serializer.fromJson<String>(json['dateKey']),
+      deltaValue: serializer.fromJson<double>(json['deltaValue']),
+      goalSnapshot: serializer.fromJson<double>(json['goalSnapshot']),
+      unitSnapshot: serializer.fromJson<String>(json['unitSnapshot']),
+      loggedAtUtcMs: serializer.fromJson<int>(json['loggedAtUtcMs']),
+      timezoneName: serializer.fromJson<String>(json['timezoneName']),
+      revision: serializer.fromJson<int>(json['revision']),
+      updatedAtUtcMs: serializer.fromJson<int>(json['updatedAtUtcMs']),
+      deletedAtUtcMs: serializer.fromJson<int?>(json['deletedAtUtcMs']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'taskId': serializer.toJson<String>(taskId),
+      'dateKey': serializer.toJson<String>(dateKey),
+      'deltaValue': serializer.toJson<double>(deltaValue),
+      'goalSnapshot': serializer.toJson<double>(goalSnapshot),
+      'unitSnapshot': serializer.toJson<String>(unitSnapshot),
+      'loggedAtUtcMs': serializer.toJson<int>(loggedAtUtcMs),
+      'timezoneName': serializer.toJson<String>(timezoneName),
+      'revision': serializer.toJson<int>(revision),
+      'updatedAtUtcMs': serializer.toJson<int>(updatedAtUtcMs),
+      'deletedAtUtcMs': serializer.toJson<int?>(deletedAtUtcMs),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+    };
+  }
+
+  TaskProgressEntry copyWith({
+    String? id,
+    String? taskId,
+    String? dateKey,
+    double? deltaValue,
+    double? goalSnapshot,
+    String? unitSnapshot,
+    int? loggedAtUtcMs,
+    String? timezoneName,
+    int? revision,
+    int? updatedAtUtcMs,
+    Value<int?> deletedAtUtcMs = const Value.absent(),
+    String? syncStatus,
+  }) => TaskProgressEntry(
+    id: id ?? this.id,
+    taskId: taskId ?? this.taskId,
+    dateKey: dateKey ?? this.dateKey,
+    deltaValue: deltaValue ?? this.deltaValue,
+    goalSnapshot: goalSnapshot ?? this.goalSnapshot,
+    unitSnapshot: unitSnapshot ?? this.unitSnapshot,
+    loggedAtUtcMs: loggedAtUtcMs ?? this.loggedAtUtcMs,
+    timezoneName: timezoneName ?? this.timezoneName,
+    revision: revision ?? this.revision,
+    updatedAtUtcMs: updatedAtUtcMs ?? this.updatedAtUtcMs,
+    deletedAtUtcMs: deletedAtUtcMs.present
+        ? deletedAtUtcMs.value
+        : this.deletedAtUtcMs,
+    syncStatus: syncStatus ?? this.syncStatus,
+  );
+  TaskProgressEntry copyWithCompanion(TaskProgressEntriesCompanion data) {
+    return TaskProgressEntry(
+      id: data.id.present ? data.id.value : this.id,
+      taskId: data.taskId.present ? data.taskId.value : this.taskId,
+      dateKey: data.dateKey.present ? data.dateKey.value : this.dateKey,
+      deltaValue: data.deltaValue.present
+          ? data.deltaValue.value
+          : this.deltaValue,
+      goalSnapshot: data.goalSnapshot.present
+          ? data.goalSnapshot.value
+          : this.goalSnapshot,
+      unitSnapshot: data.unitSnapshot.present
+          ? data.unitSnapshot.value
+          : this.unitSnapshot,
+      loggedAtUtcMs: data.loggedAtUtcMs.present
+          ? data.loggedAtUtcMs.value
+          : this.loggedAtUtcMs,
+      timezoneName: data.timezoneName.present
+          ? data.timezoneName.value
+          : this.timezoneName,
+      revision: data.revision.present ? data.revision.value : this.revision,
+      updatedAtUtcMs: data.updatedAtUtcMs.present
+          ? data.updatedAtUtcMs.value
+          : this.updatedAtUtcMs,
+      deletedAtUtcMs: data.deletedAtUtcMs.present
+          ? data.deletedAtUtcMs.value
+          : this.deletedAtUtcMs,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TaskProgressEntry(')
+          ..write('id: $id, ')
+          ..write('taskId: $taskId, ')
+          ..write('dateKey: $dateKey, ')
+          ..write('deltaValue: $deltaValue, ')
+          ..write('goalSnapshot: $goalSnapshot, ')
+          ..write('unitSnapshot: $unitSnapshot, ')
+          ..write('loggedAtUtcMs: $loggedAtUtcMs, ')
+          ..write('timezoneName: $timezoneName, ')
+          ..write('revision: $revision, ')
+          ..write('updatedAtUtcMs: $updatedAtUtcMs, ')
+          ..write('deletedAtUtcMs: $deletedAtUtcMs, ')
+          ..write('syncStatus: $syncStatus')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    taskId,
+    dateKey,
+    deltaValue,
+    goalSnapshot,
+    unitSnapshot,
+    loggedAtUtcMs,
+    timezoneName,
+    revision,
+    updatedAtUtcMs,
+    deletedAtUtcMs,
+    syncStatus,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TaskProgressEntry &&
+          other.id == this.id &&
+          other.taskId == this.taskId &&
+          other.dateKey == this.dateKey &&
+          other.deltaValue == this.deltaValue &&
+          other.goalSnapshot == this.goalSnapshot &&
+          other.unitSnapshot == this.unitSnapshot &&
+          other.loggedAtUtcMs == this.loggedAtUtcMs &&
+          other.timezoneName == this.timezoneName &&
+          other.revision == this.revision &&
+          other.updatedAtUtcMs == this.updatedAtUtcMs &&
+          other.deletedAtUtcMs == this.deletedAtUtcMs &&
+          other.syncStatus == this.syncStatus);
+}
+
+class TaskProgressEntriesCompanion extends UpdateCompanion<TaskProgressEntry> {
+  final Value<String> id;
+  final Value<String> taskId;
+  final Value<String> dateKey;
+  final Value<double> deltaValue;
+  final Value<double> goalSnapshot;
+  final Value<String> unitSnapshot;
+  final Value<int> loggedAtUtcMs;
+  final Value<String> timezoneName;
+  final Value<int> revision;
+  final Value<int> updatedAtUtcMs;
+  final Value<int?> deletedAtUtcMs;
+  final Value<String> syncStatus;
+  final Value<int> rowid;
+  const TaskProgressEntriesCompanion({
+    this.id = const Value.absent(),
+    this.taskId = const Value.absent(),
+    this.dateKey = const Value.absent(),
+    this.deltaValue = const Value.absent(),
+    this.goalSnapshot = const Value.absent(),
+    this.unitSnapshot = const Value.absent(),
+    this.loggedAtUtcMs = const Value.absent(),
+    this.timezoneName = const Value.absent(),
+    this.revision = const Value.absent(),
+    this.updatedAtUtcMs = const Value.absent(),
+    this.deletedAtUtcMs = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TaskProgressEntriesCompanion.insert({
+    required String id,
+    required String taskId,
+    required String dateKey,
+    required double deltaValue,
+    required double goalSnapshot,
+    required String unitSnapshot,
+    required int loggedAtUtcMs,
+    this.timezoneName = const Value.absent(),
+    this.revision = const Value.absent(),
+    required int updatedAtUtcMs,
+    this.deletedAtUtcMs = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       taskId = Value(taskId),
+       dateKey = Value(dateKey),
+       deltaValue = Value(deltaValue),
+       goalSnapshot = Value(goalSnapshot),
+       unitSnapshot = Value(unitSnapshot),
+       loggedAtUtcMs = Value(loggedAtUtcMs),
+       updatedAtUtcMs = Value(updatedAtUtcMs);
+  static Insertable<TaskProgressEntry> custom({
+    Expression<String>? id,
+    Expression<String>? taskId,
+    Expression<String>? dateKey,
+    Expression<double>? deltaValue,
+    Expression<double>? goalSnapshot,
+    Expression<String>? unitSnapshot,
+    Expression<int>? loggedAtUtcMs,
+    Expression<String>? timezoneName,
+    Expression<int>? revision,
+    Expression<int>? updatedAtUtcMs,
+    Expression<int>? deletedAtUtcMs,
+    Expression<String>? syncStatus,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (taskId != null) 'task_id': taskId,
+      if (dateKey != null) 'date_key': dateKey,
+      if (deltaValue != null) 'delta_value': deltaValue,
+      if (goalSnapshot != null) 'goal_snapshot': goalSnapshot,
+      if (unitSnapshot != null) 'unit_snapshot': unitSnapshot,
+      if (loggedAtUtcMs != null) 'logged_at_utc_ms': loggedAtUtcMs,
+      if (timezoneName != null) 'timezone_name': timezoneName,
+      if (revision != null) 'revision': revision,
+      if (updatedAtUtcMs != null) 'updated_at_utc_ms': updatedAtUtcMs,
+      if (deletedAtUtcMs != null) 'deleted_at_utc_ms': deletedAtUtcMs,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TaskProgressEntriesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? taskId,
+    Value<String>? dateKey,
+    Value<double>? deltaValue,
+    Value<double>? goalSnapshot,
+    Value<String>? unitSnapshot,
+    Value<int>? loggedAtUtcMs,
+    Value<String>? timezoneName,
+    Value<int>? revision,
+    Value<int>? updatedAtUtcMs,
+    Value<int?>? deletedAtUtcMs,
+    Value<String>? syncStatus,
+    Value<int>? rowid,
+  }) {
+    return TaskProgressEntriesCompanion(
+      id: id ?? this.id,
+      taskId: taskId ?? this.taskId,
+      dateKey: dateKey ?? this.dateKey,
+      deltaValue: deltaValue ?? this.deltaValue,
+      goalSnapshot: goalSnapshot ?? this.goalSnapshot,
+      unitSnapshot: unitSnapshot ?? this.unitSnapshot,
+      loggedAtUtcMs: loggedAtUtcMs ?? this.loggedAtUtcMs,
+      timezoneName: timezoneName ?? this.timezoneName,
+      revision: revision ?? this.revision,
+      updatedAtUtcMs: updatedAtUtcMs ?? this.updatedAtUtcMs,
+      deletedAtUtcMs: deletedAtUtcMs ?? this.deletedAtUtcMs,
+      syncStatus: syncStatus ?? this.syncStatus,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (taskId.present) {
+      map['task_id'] = Variable<String>(taskId.value);
+    }
+    if (dateKey.present) {
+      map['date_key'] = Variable<String>(dateKey.value);
+    }
+    if (deltaValue.present) {
+      map['delta_value'] = Variable<double>(deltaValue.value);
+    }
+    if (goalSnapshot.present) {
+      map['goal_snapshot'] = Variable<double>(goalSnapshot.value);
+    }
+    if (unitSnapshot.present) {
+      map['unit_snapshot'] = Variable<String>(unitSnapshot.value);
+    }
+    if (loggedAtUtcMs.present) {
+      map['logged_at_utc_ms'] = Variable<int>(loggedAtUtcMs.value);
+    }
+    if (timezoneName.present) {
+      map['timezone_name'] = Variable<String>(timezoneName.value);
+    }
+    if (revision.present) {
+      map['revision'] = Variable<int>(revision.value);
+    }
+    if (updatedAtUtcMs.present) {
+      map['updated_at_utc_ms'] = Variable<int>(updatedAtUtcMs.value);
+    }
+    if (deletedAtUtcMs.present) {
+      map['deleted_at_utc_ms'] = Variable<int>(deletedAtUtcMs.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TaskProgressEntriesCompanion(')
+          ..write('id: $id, ')
+          ..write('taskId: $taskId, ')
+          ..write('dateKey: $dateKey, ')
+          ..write('deltaValue: $deltaValue, ')
+          ..write('goalSnapshot: $goalSnapshot, ')
+          ..write('unitSnapshot: $unitSnapshot, ')
+          ..write('loggedAtUtcMs: $loggedAtUtcMs, ')
+          ..write('timezoneName: $timezoneName, ')
           ..write('revision: $revision, ')
           ..write('updatedAtUtcMs: $updatedAtUtcMs, ')
           ..write('deletedAtUtcMs: $deletedAtUtcMs, ')
@@ -4960,6 +7448,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $DailyHealthLogsTable dailyHealthLogs = $DailyHealthLogsTable(
     this,
   );
+  late final $CalorieEntriesTable calorieEntries = $CalorieEntriesTable(this);
+  late final $DailyTasksTable dailyTasks = $DailyTasksTable(this);
+  late final $TaskProgressEntriesTable taskProgressEntries =
+      $TaskProgressEntriesTable(this);
   late final $UserProfilesTable userProfiles = $UserProfilesTable(this);
   late final $OnboardingProfilesTable onboardingProfiles =
       $OnboardingProfilesTable(this);
@@ -4975,6 +7467,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     waterEntries,
     weightEntries,
     dailyHealthLogs,
+    calorieEntries,
+    dailyTasks,
+    taskProgressEntries,
     userProfiles,
     onboardingProfiles,
     appSettings,
@@ -6204,6 +8699,8 @@ typedef $$DailyHealthLogsTableCreateCompanionBuilder =
       Value<String> timezoneName,
       Value<int> calories,
       Value<int> steps,
+      Value<String> stepSource,
+      Value<int?> stepsSyncedAtUtcMs,
       Value<int> revision,
       required int updatedAtUtcMs,
       Value<int?> deletedAtUtcMs,
@@ -6217,6 +8714,8 @@ typedef $$DailyHealthLogsTableUpdateCompanionBuilder =
       Value<String> timezoneName,
       Value<int> calories,
       Value<int> steps,
+      Value<String> stepSource,
+      Value<int?> stepsSyncedAtUtcMs,
       Value<int> revision,
       Value<int> updatedAtUtcMs,
       Value<int?> deletedAtUtcMs,
@@ -6255,6 +8754,16 @@ class $$DailyHealthLogsTableFilterComposer
 
   ColumnFilters<int> get steps => $composableBuilder(
     column: $table.steps,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get stepSource => $composableBuilder(
+    column: $table.stepSource,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get stepsSyncedAtUtcMs => $composableBuilder(
+    column: $table.stepsSyncedAtUtcMs,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6313,6 +8822,16 @@ class $$DailyHealthLogsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get stepSource => $composableBuilder(
+    column: $table.stepSource,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get stepsSyncedAtUtcMs => $composableBuilder(
+    column: $table.stepsSyncedAtUtcMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get revision => $composableBuilder(
     column: $table.revision,
     builder: (column) => ColumnOrderings(column),
@@ -6359,6 +8878,16 @@ class $$DailyHealthLogsTableAnnotationComposer
 
   GeneratedColumn<int> get steps =>
       $composableBuilder(column: $table.steps, builder: (column) => column);
+
+  GeneratedColumn<String> get stepSource => $composableBuilder(
+    column: $table.stepSource,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get stepsSyncedAtUtcMs => $composableBuilder(
+    column: $table.stepsSyncedAtUtcMs,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get revision =>
       $composableBuilder(column: $table.revision, builder: (column) => column);
@@ -6421,6 +8950,8 @@ class $$DailyHealthLogsTableTableManager
                 Value<String> timezoneName = const Value.absent(),
                 Value<int> calories = const Value.absent(),
                 Value<int> steps = const Value.absent(),
+                Value<String> stepSource = const Value.absent(),
+                Value<int?> stepsSyncedAtUtcMs = const Value.absent(),
                 Value<int> revision = const Value.absent(),
                 Value<int> updatedAtUtcMs = const Value.absent(),
                 Value<int?> deletedAtUtcMs = const Value.absent(),
@@ -6432,6 +8963,8 @@ class $$DailyHealthLogsTableTableManager
                 timezoneName: timezoneName,
                 calories: calories,
                 steps: steps,
+                stepSource: stepSource,
+                stepsSyncedAtUtcMs: stepsSyncedAtUtcMs,
                 revision: revision,
                 updatedAtUtcMs: updatedAtUtcMs,
                 deletedAtUtcMs: deletedAtUtcMs,
@@ -6445,6 +8978,8 @@ class $$DailyHealthLogsTableTableManager
                 Value<String> timezoneName = const Value.absent(),
                 Value<int> calories = const Value.absent(),
                 Value<int> steps = const Value.absent(),
+                Value<String> stepSource = const Value.absent(),
+                Value<int?> stepsSyncedAtUtcMs = const Value.absent(),
                 Value<int> revision = const Value.absent(),
                 required int updatedAtUtcMs,
                 Value<int?> deletedAtUtcMs = const Value.absent(),
@@ -6456,6 +8991,8 @@ class $$DailyHealthLogsTableTableManager
                 timezoneName: timezoneName,
                 calories: calories,
                 steps: steps,
+                stepSource: stepSource,
+                stepsSyncedAtUtcMs: stepsSyncedAtUtcMs,
                 revision: revision,
                 updatedAtUtcMs: updatedAtUtcMs,
                 deletedAtUtcMs: deletedAtUtcMs,
@@ -6486,6 +9023,1368 @@ typedef $$DailyHealthLogsTableProcessedTableManager =
       ),
       DailyHealthLog,
       PrefetchHooks Function()
+    >;
+typedef $$CalorieEntriesTableCreateCompanionBuilder =
+    CalorieEntriesCompanion Function({
+      required String id,
+      required String dateKey,
+      required String mealType,
+      required int calories,
+      required int loggedAtUtcMs,
+      Value<String> timezoneName,
+      Value<int> revision,
+      required int updatedAtUtcMs,
+      Value<int?> deletedAtUtcMs,
+      Value<String> syncStatus,
+      Value<int> rowid,
+    });
+typedef $$CalorieEntriesTableUpdateCompanionBuilder =
+    CalorieEntriesCompanion Function({
+      Value<String> id,
+      Value<String> dateKey,
+      Value<String> mealType,
+      Value<int> calories,
+      Value<int> loggedAtUtcMs,
+      Value<String> timezoneName,
+      Value<int> revision,
+      Value<int> updatedAtUtcMs,
+      Value<int?> deletedAtUtcMs,
+      Value<String> syncStatus,
+      Value<int> rowid,
+    });
+
+class $$CalorieEntriesTableFilterComposer
+    extends Composer<_$AppDatabase, $CalorieEntriesTable> {
+  $$CalorieEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dateKey => $composableBuilder(
+    column: $table.dateKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mealType => $composableBuilder(
+    column: $table.mealType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get calories => $composableBuilder(
+    column: $table.calories,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get loggedAtUtcMs => $composableBuilder(
+    column: $table.loggedAtUtcMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get timezoneName => $composableBuilder(
+    column: $table.timezoneName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtUtcMs => $composableBuilder(
+    column: $table.updatedAtUtcMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deletedAtUtcMs => $composableBuilder(
+    column: $table.deletedAtUtcMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CalorieEntriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CalorieEntriesTable> {
+  $$CalorieEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dateKey => $composableBuilder(
+    column: $table.dateKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mealType => $composableBuilder(
+    column: $table.mealType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get calories => $composableBuilder(
+    column: $table.calories,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get loggedAtUtcMs => $composableBuilder(
+    column: $table.loggedAtUtcMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get timezoneName => $composableBuilder(
+    column: $table.timezoneName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtUtcMs => $composableBuilder(
+    column: $table.updatedAtUtcMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deletedAtUtcMs => $composableBuilder(
+    column: $table.deletedAtUtcMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CalorieEntriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CalorieEntriesTable> {
+  $$CalorieEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get dateKey =>
+      $composableBuilder(column: $table.dateKey, builder: (column) => column);
+
+  GeneratedColumn<String> get mealType =>
+      $composableBuilder(column: $table.mealType, builder: (column) => column);
+
+  GeneratedColumn<int> get calories =>
+      $composableBuilder(column: $table.calories, builder: (column) => column);
+
+  GeneratedColumn<int> get loggedAtUtcMs => $composableBuilder(
+    column: $table.loggedAtUtcMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get timezoneName => $composableBuilder(
+    column: $table.timezoneName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get revision =>
+      $composableBuilder(column: $table.revision, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAtUtcMs => $composableBuilder(
+    column: $table.updatedAtUtcMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get deletedAtUtcMs => $composableBuilder(
+    column: $table.deletedAtUtcMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+}
+
+class $$CalorieEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CalorieEntriesTable,
+          CalorieEntry,
+          $$CalorieEntriesTableFilterComposer,
+          $$CalorieEntriesTableOrderingComposer,
+          $$CalorieEntriesTableAnnotationComposer,
+          $$CalorieEntriesTableCreateCompanionBuilder,
+          $$CalorieEntriesTableUpdateCompanionBuilder,
+          (
+            CalorieEntry,
+            BaseReferences<_$AppDatabase, $CalorieEntriesTable, CalorieEntry>,
+          ),
+          CalorieEntry,
+          PrefetchHooks Function()
+        > {
+  $$CalorieEntriesTableTableManager(
+    _$AppDatabase db,
+    $CalorieEntriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CalorieEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CalorieEntriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CalorieEntriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> dateKey = const Value.absent(),
+                Value<String> mealType = const Value.absent(),
+                Value<int> calories = const Value.absent(),
+                Value<int> loggedAtUtcMs = const Value.absent(),
+                Value<String> timezoneName = const Value.absent(),
+                Value<int> revision = const Value.absent(),
+                Value<int> updatedAtUtcMs = const Value.absent(),
+                Value<int?> deletedAtUtcMs = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CalorieEntriesCompanion(
+                id: id,
+                dateKey: dateKey,
+                mealType: mealType,
+                calories: calories,
+                loggedAtUtcMs: loggedAtUtcMs,
+                timezoneName: timezoneName,
+                revision: revision,
+                updatedAtUtcMs: updatedAtUtcMs,
+                deletedAtUtcMs: deletedAtUtcMs,
+                syncStatus: syncStatus,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String dateKey,
+                required String mealType,
+                required int calories,
+                required int loggedAtUtcMs,
+                Value<String> timezoneName = const Value.absent(),
+                Value<int> revision = const Value.absent(),
+                required int updatedAtUtcMs,
+                Value<int?> deletedAtUtcMs = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CalorieEntriesCompanion.insert(
+                id: id,
+                dateKey: dateKey,
+                mealType: mealType,
+                calories: calories,
+                loggedAtUtcMs: loggedAtUtcMs,
+                timezoneName: timezoneName,
+                revision: revision,
+                updatedAtUtcMs: updatedAtUtcMs,
+                deletedAtUtcMs: deletedAtUtcMs,
+                syncStatus: syncStatus,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CalorieEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CalorieEntriesTable,
+      CalorieEntry,
+      $$CalorieEntriesTableFilterComposer,
+      $$CalorieEntriesTableOrderingComposer,
+      $$CalorieEntriesTableAnnotationComposer,
+      $$CalorieEntriesTableCreateCompanionBuilder,
+      $$CalorieEntriesTableUpdateCompanionBuilder,
+      (
+        CalorieEntry,
+        BaseReferences<_$AppDatabase, $CalorieEntriesTable, CalorieEntry>,
+      ),
+      CalorieEntry,
+      PrefetchHooks Function()
+    >;
+typedef $$DailyTasksTableCreateCompanionBuilder =
+    DailyTasksCompanion Function({
+      required String id,
+      Value<String> kind,
+      required String title,
+      required String iconKey,
+      required String colorKey,
+      required String goalType,
+      required double targetValue,
+      required String unit,
+      required double quickIncrement,
+      Value<int> weekdaysMask,
+      Value<int?> reminderMinute,
+      Value<int> sortOrder,
+      Value<bool> enabled,
+      required int createdAtUtcMs,
+      Value<int> revision,
+      required int updatedAtUtcMs,
+      Value<int?> deletedAtUtcMs,
+      Value<String> syncStatus,
+      Value<int> rowid,
+    });
+typedef $$DailyTasksTableUpdateCompanionBuilder =
+    DailyTasksCompanion Function({
+      Value<String> id,
+      Value<String> kind,
+      Value<String> title,
+      Value<String> iconKey,
+      Value<String> colorKey,
+      Value<String> goalType,
+      Value<double> targetValue,
+      Value<String> unit,
+      Value<double> quickIncrement,
+      Value<int> weekdaysMask,
+      Value<int?> reminderMinute,
+      Value<int> sortOrder,
+      Value<bool> enabled,
+      Value<int> createdAtUtcMs,
+      Value<int> revision,
+      Value<int> updatedAtUtcMs,
+      Value<int?> deletedAtUtcMs,
+      Value<String> syncStatus,
+      Value<int> rowid,
+    });
+
+final class $$DailyTasksTableReferences
+    extends BaseReferences<_$AppDatabase, $DailyTasksTable, DailyTask> {
+  $$DailyTasksTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$TaskProgressEntriesTable, List<TaskProgressEntry>>
+  _taskProgressEntriesRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.taskProgressEntries,
+        aliasName: 'daily_tasks__id__task_progress_entries__task_id',
+      );
+
+  $$TaskProgressEntriesTableProcessedTableManager get taskProgressEntriesRefs {
+    final manager = $$TaskProgressEntriesTableTableManager(
+      $_db,
+      $_db.taskProgressEntries,
+    ).filter((f) => f.taskId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _taskProgressEntriesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$DailyTasksTableFilterComposer
+    extends Composer<_$AppDatabase, $DailyTasksTable> {
+  $$DailyTasksTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get iconKey => $composableBuilder(
+    column: $table.iconKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get colorKey => $composableBuilder(
+    column: $table.colorKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get goalType => $composableBuilder(
+    column: $table.goalType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get targetValue => $composableBuilder(
+    column: $table.targetValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get quickIncrement => $composableBuilder(
+    column: $table.quickIncrement,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get weekdaysMask => $composableBuilder(
+    column: $table.weekdaysMask,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get reminderMinute => $composableBuilder(
+    column: $table.reminderMinute,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get enabled => $composableBuilder(
+    column: $table.enabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAtUtcMs => $composableBuilder(
+    column: $table.createdAtUtcMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtUtcMs => $composableBuilder(
+    column: $table.updatedAtUtcMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deletedAtUtcMs => $composableBuilder(
+    column: $table.deletedAtUtcMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> taskProgressEntriesRefs(
+    Expression<bool> Function($$TaskProgressEntriesTableFilterComposer f) f,
+  ) {
+    final $$TaskProgressEntriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.taskProgressEntries,
+      getReferencedColumn: (t) => t.taskId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TaskProgressEntriesTableFilterComposer(
+            $db: $db,
+            $table: $db.taskProgressEntries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$DailyTasksTableOrderingComposer
+    extends Composer<_$AppDatabase, $DailyTasksTable> {
+  $$DailyTasksTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get iconKey => $composableBuilder(
+    column: $table.iconKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get colorKey => $composableBuilder(
+    column: $table.colorKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get goalType => $composableBuilder(
+    column: $table.goalType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get targetValue => $composableBuilder(
+    column: $table.targetValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get quickIncrement => $composableBuilder(
+    column: $table.quickIncrement,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get weekdaysMask => $composableBuilder(
+    column: $table.weekdaysMask,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get reminderMinute => $composableBuilder(
+    column: $table.reminderMinute,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get enabled => $composableBuilder(
+    column: $table.enabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAtUtcMs => $composableBuilder(
+    column: $table.createdAtUtcMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtUtcMs => $composableBuilder(
+    column: $table.updatedAtUtcMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deletedAtUtcMs => $composableBuilder(
+    column: $table.deletedAtUtcMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DailyTasksTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DailyTasksTable> {
+  $$DailyTasksTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get iconKey =>
+      $composableBuilder(column: $table.iconKey, builder: (column) => column);
+
+  GeneratedColumn<String> get colorKey =>
+      $composableBuilder(column: $table.colorKey, builder: (column) => column);
+
+  GeneratedColumn<String> get goalType =>
+      $composableBuilder(column: $table.goalType, builder: (column) => column);
+
+  GeneratedColumn<double> get targetValue => $composableBuilder(
+    column: $table.targetValue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<double> get quickIncrement => $composableBuilder(
+    column: $table.quickIncrement,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get weekdaysMask => $composableBuilder(
+    column: $table.weekdaysMask,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get reminderMinute => $composableBuilder(
+    column: $table.reminderMinute,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<bool> get enabled =>
+      $composableBuilder(column: $table.enabled, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAtUtcMs => $composableBuilder(
+    column: $table.createdAtUtcMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get revision =>
+      $composableBuilder(column: $table.revision, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAtUtcMs => $composableBuilder(
+    column: $table.updatedAtUtcMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get deletedAtUtcMs => $composableBuilder(
+    column: $table.deletedAtUtcMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  Expression<T> taskProgressEntriesRefs<T extends Object>(
+    Expression<T> Function($$TaskProgressEntriesTableAnnotationComposer a) f,
+  ) {
+    final $$TaskProgressEntriesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.taskProgressEntries,
+          getReferencedColumn: (t) => t.taskId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$TaskProgressEntriesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.taskProgressEntries,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$DailyTasksTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DailyTasksTable,
+          DailyTask,
+          $$DailyTasksTableFilterComposer,
+          $$DailyTasksTableOrderingComposer,
+          $$DailyTasksTableAnnotationComposer,
+          $$DailyTasksTableCreateCompanionBuilder,
+          $$DailyTasksTableUpdateCompanionBuilder,
+          (DailyTask, $$DailyTasksTableReferences),
+          DailyTask,
+          PrefetchHooks Function({bool taskProgressEntriesRefs})
+        > {
+  $$DailyTasksTableTableManager(_$AppDatabase db, $DailyTasksTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DailyTasksTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DailyTasksTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DailyTasksTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> iconKey = const Value.absent(),
+                Value<String> colorKey = const Value.absent(),
+                Value<String> goalType = const Value.absent(),
+                Value<double> targetValue = const Value.absent(),
+                Value<String> unit = const Value.absent(),
+                Value<double> quickIncrement = const Value.absent(),
+                Value<int> weekdaysMask = const Value.absent(),
+                Value<int?> reminderMinute = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<bool> enabled = const Value.absent(),
+                Value<int> createdAtUtcMs = const Value.absent(),
+                Value<int> revision = const Value.absent(),
+                Value<int> updatedAtUtcMs = const Value.absent(),
+                Value<int?> deletedAtUtcMs = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DailyTasksCompanion(
+                id: id,
+                kind: kind,
+                title: title,
+                iconKey: iconKey,
+                colorKey: colorKey,
+                goalType: goalType,
+                targetValue: targetValue,
+                unit: unit,
+                quickIncrement: quickIncrement,
+                weekdaysMask: weekdaysMask,
+                reminderMinute: reminderMinute,
+                sortOrder: sortOrder,
+                enabled: enabled,
+                createdAtUtcMs: createdAtUtcMs,
+                revision: revision,
+                updatedAtUtcMs: updatedAtUtcMs,
+                deletedAtUtcMs: deletedAtUtcMs,
+                syncStatus: syncStatus,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String> kind = const Value.absent(),
+                required String title,
+                required String iconKey,
+                required String colorKey,
+                required String goalType,
+                required double targetValue,
+                required String unit,
+                required double quickIncrement,
+                Value<int> weekdaysMask = const Value.absent(),
+                Value<int?> reminderMinute = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<bool> enabled = const Value.absent(),
+                required int createdAtUtcMs,
+                Value<int> revision = const Value.absent(),
+                required int updatedAtUtcMs,
+                Value<int?> deletedAtUtcMs = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DailyTasksCompanion.insert(
+                id: id,
+                kind: kind,
+                title: title,
+                iconKey: iconKey,
+                colorKey: colorKey,
+                goalType: goalType,
+                targetValue: targetValue,
+                unit: unit,
+                quickIncrement: quickIncrement,
+                weekdaysMask: weekdaysMask,
+                reminderMinute: reminderMinute,
+                sortOrder: sortOrder,
+                enabled: enabled,
+                createdAtUtcMs: createdAtUtcMs,
+                revision: revision,
+                updatedAtUtcMs: updatedAtUtcMs,
+                deletedAtUtcMs: deletedAtUtcMs,
+                syncStatus: syncStatus,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$DailyTasksTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({taskProgressEntriesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (taskProgressEntriesRefs) db.taskProgressEntries,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (taskProgressEntriesRefs)
+                    await $_getPrefetchedData<
+                      DailyTask,
+                      $DailyTasksTable,
+                      TaskProgressEntry
+                    >(
+                      currentTable: table,
+                      referencedTable: $$DailyTasksTableReferences
+                          ._taskProgressEntriesRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$DailyTasksTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).taskProgressEntriesRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.taskId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$DailyTasksTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DailyTasksTable,
+      DailyTask,
+      $$DailyTasksTableFilterComposer,
+      $$DailyTasksTableOrderingComposer,
+      $$DailyTasksTableAnnotationComposer,
+      $$DailyTasksTableCreateCompanionBuilder,
+      $$DailyTasksTableUpdateCompanionBuilder,
+      (DailyTask, $$DailyTasksTableReferences),
+      DailyTask,
+      PrefetchHooks Function({bool taskProgressEntriesRefs})
+    >;
+typedef $$TaskProgressEntriesTableCreateCompanionBuilder =
+    TaskProgressEntriesCompanion Function({
+      required String id,
+      required String taskId,
+      required String dateKey,
+      required double deltaValue,
+      required double goalSnapshot,
+      required String unitSnapshot,
+      required int loggedAtUtcMs,
+      Value<String> timezoneName,
+      Value<int> revision,
+      required int updatedAtUtcMs,
+      Value<int?> deletedAtUtcMs,
+      Value<String> syncStatus,
+      Value<int> rowid,
+    });
+typedef $$TaskProgressEntriesTableUpdateCompanionBuilder =
+    TaskProgressEntriesCompanion Function({
+      Value<String> id,
+      Value<String> taskId,
+      Value<String> dateKey,
+      Value<double> deltaValue,
+      Value<double> goalSnapshot,
+      Value<String> unitSnapshot,
+      Value<int> loggedAtUtcMs,
+      Value<String> timezoneName,
+      Value<int> revision,
+      Value<int> updatedAtUtcMs,
+      Value<int?> deletedAtUtcMs,
+      Value<String> syncStatus,
+      Value<int> rowid,
+    });
+
+final class $$TaskProgressEntriesTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $TaskProgressEntriesTable,
+          TaskProgressEntry
+        > {
+  $$TaskProgressEntriesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $DailyTasksTable _taskIdTable(_$AppDatabase db) => db.dailyTasks
+      .createAlias('task_progress_entries__task_id__daily_tasks__id');
+
+  $$DailyTasksTableProcessedTableManager get taskId {
+    final $_column = $_itemColumn<String>('task_id')!;
+
+    final manager = $$DailyTasksTableTableManager(
+      $_db,
+      $_db.dailyTasks,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_taskIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$TaskProgressEntriesTableFilterComposer
+    extends Composer<_$AppDatabase, $TaskProgressEntriesTable> {
+  $$TaskProgressEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dateKey => $composableBuilder(
+    column: $table.dateKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get deltaValue => $composableBuilder(
+    column: $table.deltaValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get goalSnapshot => $composableBuilder(
+    column: $table.goalSnapshot,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unitSnapshot => $composableBuilder(
+    column: $table.unitSnapshot,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get loggedAtUtcMs => $composableBuilder(
+    column: $table.loggedAtUtcMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get timezoneName => $composableBuilder(
+    column: $table.timezoneName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtUtcMs => $composableBuilder(
+    column: $table.updatedAtUtcMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deletedAtUtcMs => $composableBuilder(
+    column: $table.deletedAtUtcMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$DailyTasksTableFilterComposer get taskId {
+    final $$DailyTasksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.taskId,
+      referencedTable: $db.dailyTasks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DailyTasksTableFilterComposer(
+            $db: $db,
+            $table: $db.dailyTasks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TaskProgressEntriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $TaskProgressEntriesTable> {
+  $$TaskProgressEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dateKey => $composableBuilder(
+    column: $table.dateKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get deltaValue => $composableBuilder(
+    column: $table.deltaValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get goalSnapshot => $composableBuilder(
+    column: $table.goalSnapshot,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unitSnapshot => $composableBuilder(
+    column: $table.unitSnapshot,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get loggedAtUtcMs => $composableBuilder(
+    column: $table.loggedAtUtcMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get timezoneName => $composableBuilder(
+    column: $table.timezoneName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtUtcMs => $composableBuilder(
+    column: $table.updatedAtUtcMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deletedAtUtcMs => $composableBuilder(
+    column: $table.deletedAtUtcMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$DailyTasksTableOrderingComposer get taskId {
+    final $$DailyTasksTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.taskId,
+      referencedTable: $db.dailyTasks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DailyTasksTableOrderingComposer(
+            $db: $db,
+            $table: $db.dailyTasks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TaskProgressEntriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TaskProgressEntriesTable> {
+  $$TaskProgressEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get dateKey =>
+      $composableBuilder(column: $table.dateKey, builder: (column) => column);
+
+  GeneratedColumn<double> get deltaValue => $composableBuilder(
+    column: $table.deltaValue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get goalSnapshot => $composableBuilder(
+    column: $table.goalSnapshot,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get unitSnapshot => $composableBuilder(
+    column: $table.unitSnapshot,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get loggedAtUtcMs => $composableBuilder(
+    column: $table.loggedAtUtcMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get timezoneName => $composableBuilder(
+    column: $table.timezoneName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get revision =>
+      $composableBuilder(column: $table.revision, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAtUtcMs => $composableBuilder(
+    column: $table.updatedAtUtcMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get deletedAtUtcMs => $composableBuilder(
+    column: $table.deletedAtUtcMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  $$DailyTasksTableAnnotationComposer get taskId {
+    final $$DailyTasksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.taskId,
+      referencedTable: $db.dailyTasks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DailyTasksTableAnnotationComposer(
+            $db: $db,
+            $table: $db.dailyTasks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TaskProgressEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TaskProgressEntriesTable,
+          TaskProgressEntry,
+          $$TaskProgressEntriesTableFilterComposer,
+          $$TaskProgressEntriesTableOrderingComposer,
+          $$TaskProgressEntriesTableAnnotationComposer,
+          $$TaskProgressEntriesTableCreateCompanionBuilder,
+          $$TaskProgressEntriesTableUpdateCompanionBuilder,
+          (TaskProgressEntry, $$TaskProgressEntriesTableReferences),
+          TaskProgressEntry,
+          PrefetchHooks Function({bool taskId})
+        > {
+  $$TaskProgressEntriesTableTableManager(
+    _$AppDatabase db,
+    $TaskProgressEntriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TaskProgressEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TaskProgressEntriesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$TaskProgressEntriesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> taskId = const Value.absent(),
+                Value<String> dateKey = const Value.absent(),
+                Value<double> deltaValue = const Value.absent(),
+                Value<double> goalSnapshot = const Value.absent(),
+                Value<String> unitSnapshot = const Value.absent(),
+                Value<int> loggedAtUtcMs = const Value.absent(),
+                Value<String> timezoneName = const Value.absent(),
+                Value<int> revision = const Value.absent(),
+                Value<int> updatedAtUtcMs = const Value.absent(),
+                Value<int?> deletedAtUtcMs = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TaskProgressEntriesCompanion(
+                id: id,
+                taskId: taskId,
+                dateKey: dateKey,
+                deltaValue: deltaValue,
+                goalSnapshot: goalSnapshot,
+                unitSnapshot: unitSnapshot,
+                loggedAtUtcMs: loggedAtUtcMs,
+                timezoneName: timezoneName,
+                revision: revision,
+                updatedAtUtcMs: updatedAtUtcMs,
+                deletedAtUtcMs: deletedAtUtcMs,
+                syncStatus: syncStatus,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String taskId,
+                required String dateKey,
+                required double deltaValue,
+                required double goalSnapshot,
+                required String unitSnapshot,
+                required int loggedAtUtcMs,
+                Value<String> timezoneName = const Value.absent(),
+                Value<int> revision = const Value.absent(),
+                required int updatedAtUtcMs,
+                Value<int?> deletedAtUtcMs = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TaskProgressEntriesCompanion.insert(
+                id: id,
+                taskId: taskId,
+                dateKey: dateKey,
+                deltaValue: deltaValue,
+                goalSnapshot: goalSnapshot,
+                unitSnapshot: unitSnapshot,
+                loggedAtUtcMs: loggedAtUtcMs,
+                timezoneName: timezoneName,
+                revision: revision,
+                updatedAtUtcMs: updatedAtUtcMs,
+                deletedAtUtcMs: deletedAtUtcMs,
+                syncStatus: syncStatus,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$TaskProgressEntriesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({taskId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (taskId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.taskId,
+                                referencedTable:
+                                    $$TaskProgressEntriesTableReferences
+                                        ._taskIdTable(db),
+                                referencedColumn:
+                                    $$TaskProgressEntriesTableReferences
+                                        ._taskIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$TaskProgressEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TaskProgressEntriesTable,
+      TaskProgressEntry,
+      $$TaskProgressEntriesTableFilterComposer,
+      $$TaskProgressEntriesTableOrderingComposer,
+      $$TaskProgressEntriesTableAnnotationComposer,
+      $$TaskProgressEntriesTableCreateCompanionBuilder,
+      $$TaskProgressEntriesTableUpdateCompanionBuilder,
+      (TaskProgressEntry, $$TaskProgressEntriesTableReferences),
+      TaskProgressEntry,
+      PrefetchHooks Function({bool taskId})
     >;
 typedef $$UserProfilesTableCreateCompanionBuilder =
     UserProfilesCompanion Function({
@@ -7498,6 +11397,12 @@ class $AppDatabaseManager {
       $$WeightEntriesTableTableManager(_db, _db.weightEntries);
   $$DailyHealthLogsTableTableManager get dailyHealthLogs =>
       $$DailyHealthLogsTableTableManager(_db, _db.dailyHealthLogs);
+  $$CalorieEntriesTableTableManager get calorieEntries =>
+      $$CalorieEntriesTableTableManager(_db, _db.calorieEntries);
+  $$DailyTasksTableTableManager get dailyTasks =>
+      $$DailyTasksTableTableManager(_db, _db.dailyTasks);
+  $$TaskProgressEntriesTableTableManager get taskProgressEntries =>
+      $$TaskProgressEntriesTableTableManager(_db, _db.taskProgressEntries);
   $$UserProfilesTableTableManager get userProfiles =>
       $$UserProfilesTableTableManager(_db, _db.userProfiles);
   $$OnboardingProfilesTableTableManager get onboardingProfiles =>

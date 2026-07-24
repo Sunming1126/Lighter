@@ -20,7 +20,15 @@ class ProgressScreen extends ConsumerStatefulWidget {
 
 class _ProgressScreenState extends ConsumerState<ProgressScreen> {
   bool monthRange = false;
+  bool calendarExpanded = false;
+  bool calendarStateTouched = false;
   DateTime calendarMonth = DateTime(DateTime.now().year, DateTime.now().month);
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreCalendarState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +77,8 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
                 _CalendarCard(
                   month: calendarMonth,
                   sessions: sessions,
+                  expanded: calendarExpanded,
+                  onToggle: _toggleCalendar,
                   onPrevious: () => setState(
                     () => calendarMonth = DateTime(
                       calendarMonth.year,
@@ -165,6 +175,30 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen> {
     await controller.setLanguage(
       zh ? LanguagePreference.en : LanguagePreference.zh,
     );
+  }
+
+  Future<void> _restoreCalendarState() async {
+    final value = await ref
+        .read(repositoryProvider)
+        .getPreference('progressCalendarExpanded');
+    if (mounted && !calendarStateTouched && value == 'true') {
+      setState(() => calendarExpanded = true);
+    }
+  }
+
+  Future<void> _toggleCalendar() async {
+    final next = !calendarExpanded;
+    setState(() {
+      calendarStateTouched = true;
+      calendarExpanded = next;
+      if (!next) {
+        final now = DateTime.now();
+        calendarMonth = DateTime(now.year, now.month);
+      }
+    });
+    await ref
+        .read(repositoryProvider)
+        .setPreference('progressCalendarExpanded', next.toString());
   }
 }
 
@@ -276,21 +310,6 @@ class _OverviewCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: .62),
-              borderRadius: BorderRadius.circular(13),
-            ),
-            child: Text(
-              zh
-                  ? '不追求每天，稳定就好。休息日也是计划的一部分。'
-                  : 'Not every day — steady is enough. Rest days are part of the plan.',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
         ],
       ),
     );
@@ -334,11 +353,15 @@ class _CalendarCard extends StatelessWidget {
   const _CalendarCard({
     required this.month,
     required this.sessions,
+    required this.expanded,
+    required this.onToggle,
     required this.onPrevious,
     required this.onNext,
   });
   final DateTime month;
   final List<FastingSession> sessions;
+  final bool expanded;
+  final VoidCallback onToggle;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
 
@@ -350,11 +373,19 @@ class _CalendarCard extends StatelessWidget {
     final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
     final leading = first.weekday % 7;
     final status = <int, String>{};
+    final statusByDate = <String, String>{};
     for (final item in sessions) {
       final local = DateTime.fromMillisecondsSinceEpoch(
         item.startedAtUtcMs,
         isUtc: true,
       ).toLocal();
+      final value = item.endedAtUtcMs == null
+          ? 'active'
+          : (item.endedAtUtcMs! - item.startedAtUtcMs) >=
+                item.targetMinutes * 60000
+          ? 'done'
+          : 'partial';
+      statusByDate[_calendarDateKey(local)] = value;
       if (local.year != month.year || local.month != month.month) continue;
       if (item.endedAtUtcMs == null) {
         status[local.day] = 'active';
@@ -369,101 +400,208 @@ class _CalendarCard extends StatelessWidget {
     final labels = zh
         ? const ['日', '一', '二', '三', '四', '五', '六']
         : const ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    final doneCount = status.values.where((value) => value == 'done').length;
+    final partialCount = status.values
+        .where((value) => value == 'partial')
+        .length;
+    final today = DateTime.now();
+    final weekStart = DateTime(
+      today.year,
+      today.month,
+      today.day,
+    ).subtract(Duration(days: today.weekday % 7));
+    final currentWeek = List.generate(
+      7,
+      (index) => weekStart.add(Duration(days: index)),
+    );
     return LighterCard(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
       child: Column(
         children: [
           Row(
             children: [
-              IconButton(
-                onPressed: onPrevious,
-                icon: const Icon(CupertinoIcons.chevron_left, size: 18),
-              ),
+              if (expanded)
+                IconButton(
+                  onPressed: onPrevious,
+                  icon: const Icon(CupertinoIcons.chevron_left, size: 18),
+                )
+              else
+                const SizedBox(width: 48),
               Expanded(
-                child: Text(
-                  DateFormat(
-                    zh ? 'y年M月' : 'MMMM y',
-                    locale.toLanguageTag(),
-                  ).format(month),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium,
+                child: InkWell(
+                  onTap: onToggle,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: Column(
+                      children: [
+                        Text(
+                          DateFormat(
+                            zh ? 'y年M月' : 'MMMM y',
+                            locale.toLanguageTag(),
+                          ).format(month),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          zh
+                              ? '完成 $doneCount · 提前结束 $partialCount'
+                              : '$doneCount done · $partialCount early',
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            color: AppColors.faint,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
+              if (expanded)
+                IconButton(
+                  onPressed: onNext,
+                  icon: const Icon(CupertinoIcons.chevron_right, size: 18),
+                ),
               IconButton(
-                onPressed: onNext,
-                icon: const Icon(CupertinoIcons.chevron_right, size: 18),
+                onPressed: onToggle,
+                tooltip: expanded
+                    ? (zh ? '收起日历' : 'Collapse calendar')
+                    : (zh ? '展开日历' : 'Expand calendar'),
+                icon: AnimatedRotation(
+                  turns: expanded ? .5 : 0,
+                  duration: const Duration(milliseconds: 220),
+                  child: const Icon(CupertinoIcons.chevron_down, size: 17),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 7,
-              mainAxisExtent: 38,
+          ClipRect(
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 240),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: expanded
+                  ? Column(
+                      children: [
+                        const SizedBox(height: 8),
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 7,
+                                mainAxisExtent: 38,
+                              ),
+                          itemCount: 7 + leading + daysInMonth,
+                          itemBuilder: (context, index) {
+                            if (index < 7) {
+                              return Center(
+                                child: Text(
+                                  labels[index],
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.faint,
+                                  ),
+                                ),
+                              );
+                            }
+                            final day = index - 7 - leading + 1;
+                            if (day < 1 || day > daysInMonth) {
+                              return const SizedBox.shrink();
+                            }
+                            final value = status[day];
+                            final today = DateTime.now();
+                            final isToday =
+                                today.year == month.year &&
+                                today.month == month.month &&
+                                today.day == day;
+                            final color = value == 'done'
+                                ? AppColors.accent
+                                : value == 'partial'
+                                ? AppColors.accentSoft
+                                : value == 'active'
+                                ? AppColors.warning
+                                : Colors.transparent;
+                            return Center(
+                              child: Container(
+                                width: 30,
+                                height: 30,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  shape: BoxShape.circle,
+                                  border: isToday
+                                      ? Border.all(
+                                          color: AppColors.strong,
+                                          width: 1.2,
+                                        )
+                                      : null,
+                                ),
+                                child: Text(
+                                  '$day',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: isToday
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                    color: value == 'done'
+                                        ? Colors.white
+                                        : AppColors.foreground,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _legend(AppColors.accent, zh ? '完成' : 'Done'),
+                            const SizedBox(width: 14),
+                            _legend(
+                              AppColors.accentSoft,
+                              zh ? '提前结束' : 'Early end',
+                            ),
+                          ],
+                        ),
+                      ],
+                    )
+                  : Column(
+                      children: [
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            for (final label in labels)
+                              Expanded(
+                                child: Text(
+                                  label,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 10.5,
+                                    color: AppColors.faint,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            for (final date in currentWeek)
+                              Expanded(
+                                child: _CollapsedCalendarDay(
+                                  date: date,
+                                  status: statusByDate[_calendarDateKey(date)],
+                                  today: today,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
             ),
-            itemCount: 7 + leading + daysInMonth,
-            itemBuilder: (context, index) {
-              if (index < 7) {
-                return Center(
-                  child: Text(
-                    labels[index],
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.faint,
-                    ),
-                  ),
-                );
-              }
-              final day = index - 7 - leading + 1;
-              if (day < 1 || day > daysInMonth) return const SizedBox.shrink();
-              final value = status[day];
-              final today = DateTime.now();
-              final isToday =
-                  today.year == month.year &&
-                  today.month == month.month &&
-                  today.day == day;
-              final color = value == 'done'
-                  ? AppColors.accent
-                  : value == 'partial'
-                  ? AppColors.accentSoft
-                  : value == 'active'
-                  ? AppColors.warning
-                  : Colors.transparent;
-              return Center(
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                    border: isToday
-                        ? Border.all(color: AppColors.strong, width: 1.2)
-                        : null,
-                  ),
-                  child: Text(
-                    '$day',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
-                      color: value == 'done'
-                          ? Colors.white
-                          : AppColors.foreground,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _legend(AppColors.accent, zh ? '完成' : 'Done'),
-              const SizedBox(width: 14),
-              _legend(AppColors.accentSoft, zh ? '提前结束' : 'Early end'),
-            ],
           ),
         ],
       ),
@@ -482,6 +620,65 @@ class _CalendarCard extends StatelessWidget {
     ],
   );
 }
+
+class _CollapsedCalendarDay extends StatelessWidget {
+  const _CollapsedCalendarDay({
+    required this.date,
+    required this.status,
+    required this.today,
+  });
+
+  final DateTime date;
+  final String? status;
+  final DateTime today;
+
+  @override
+  Widget build(BuildContext context) {
+    final isToday =
+        date.year == today.year &&
+        date.month == today.month &&
+        date.day == today.day;
+    final isCurrentMonth = date.month == today.month && date.year == today.year;
+    final color = status == 'done'
+        ? AppColors.accent
+        : status == 'partial'
+        ? AppColors.accentSoft
+        : status == 'active'
+        ? AppColors.warning
+        : Colors.transparent;
+    return Center(
+      child: Container(
+        width: 30,
+        height: 30,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: isToday
+              ? Border.all(color: AppColors.strong, width: 1.2)
+              : null,
+        ),
+        child: Text(
+          '${date.day}',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
+            color: status == 'done'
+                ? Colors.white
+                : isCurrentMonth
+                ? AppColors.foreground
+                : AppColors.faint,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String _calendarDateKey(DateTime date) =>
+    '${date.year.toString().padLeft(4, '0')}-'
+    '${date.month.toString().padLeft(2, '0')}-'
+    '${date.day.toString().padLeft(2, '0')}';
 
 class _WeightCard extends StatelessWidget {
   const _WeightCard({

@@ -52,6 +52,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
   @override
   Widget build(BuildContext context) {
     final active = ref.watch(activeSessionProvider).valueOrNull;
+    final plan = ref.watch(activePlanProvider).valueOrNull;
     final history =
         ref.watch(sessionHistoryProvider).valueOrNull ??
         const <FastingSession>[];
@@ -71,13 +72,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
             title: s.today,
             subtitle: date,
             actions: [
-              IconButton(
-                onPressed: () => _showCalendar(history),
-                tooltip: Localizations.localeOf(context).languageCode == 'zh'
-                    ? '断食日历'
-                    : 'Fasting calendar',
-                icon: const Icon(CupertinoIcons.calendar, size: 21),
-              ),
+              _PlanHeaderAction(plan: plan, onAdjust: _showPlanPicker),
             ],
           ),
           Expanded(
@@ -101,7 +96,6 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
                   : _IdleView(
                       key: const ValueKey('idle'),
                       onStart: _start,
-                      onAdjustPlan: _showPlanPicker,
                     ),
             ),
           ),
@@ -159,9 +153,6 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
     if (result != null) await _end(reason: 'discomfort', symptoms: result);
   }
 
-  Future<void> _showCalendar(List<FastingSession> sessions) async =>
-      showLighterSheet<void>(context, _TodayCalendarSheet(sessions: sessions));
-
   Future<void> _showPlanPicker() async {
     final plan = await ref.read(repositoryProvider).ensureDefaultPlan();
     if (!mounted) return;
@@ -169,18 +160,67 @@ class _TodayScreenState extends ConsumerState<TodayScreen>
   }
 }
 
+class _PlanHeaderAction extends StatelessWidget {
+  const _PlanHeaderAction({required this.plan, required this.onAdjust});
+  final FastingPlan? plan;
+  final VoidCallback onAdjust;
+
+  @override
+  Widget build(BuildContext context) {
+    final zh = Localizations.localeOf(context).languageCode == 'zh';
+    return GestureDetector(
+      onTap: onAdjust,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: AppColors.accentTint,
+          borderRadius: BorderRadius.circular(99),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _planRatio(plan?.fastMinutes ?? 720),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.accent,
+              ),
+            ),
+            Container(
+              width: 1,
+              height: 13,
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+              color: AppColors.accent.withValues(alpha: .28),
+            ),
+            Icon(
+              CupertinoIcons.slider_horizontal_3,
+              size: 13,
+              color: AppColors.accent,
+            ),
+            const SizedBox(width: 3),
+            Text(
+              zh ? '调整' : 'Adjust',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.accent,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _IdleView extends ConsumerWidget {
-  const _IdleView({
-    super.key,
-    required this.onStart,
-    required this.onAdjustPlan,
-  });
+  const _IdleView({super.key, required this.onStart});
   final VoidCallback onStart;
-  final VoidCallback onAdjustPlan;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final s = AppLocalizations.of(context);
     final plan = ref.watch(activePlanProvider).valueOrNull;
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -191,110 +231,6 @@ class _IdleView extends ConsumerWidget {
       ),
       children: [
         _IdleHero(plan: plan, onStart: onStart),
-        const SizedBox(height: 14),
-        SectionTitle(
-          s.currentPlan,
-          action: TextButton.icon(
-            onPressed: onAdjustPlan,
-            icon: const Icon(CupertinoIcons.slider_horizontal_3, size: 15),
-            label: Text(
-              Localizations.localeOf(context).languageCode == 'zh'
-                  ? '调整计划'
-                  : 'Adjust plan',
-            ),
-          ),
-        ),
-        LighterGlassCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    _planRatio(plan?.fastMinutes ?? 720),
-                    style: const TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentTint,
-                      borderRadius: BorderRadius.circular(99),
-                    ),
-                    child: Text(
-                      _planLevelLabel(context, plan?.fastMinutes ?? 720),
-                      style: const TextStyle(
-                        color: AppColors.accent,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                _planDescription(context, plan),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 18),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 1440 - (plan?.fastMinutes ?? 720),
-                      child: Container(height: 8, color: AppColors.accentSoft),
-                    ),
-                    Expanded(
-                      flex: plan?.fastMinutes ?? 720,
-                      child: Container(height: 8, color: AppColors.accent),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 9),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    Localizations.localeOf(context).languageCode == 'zh'
-                        ? '最后一餐'
-                        : 'Last meal',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.faint,
-                    ),
-                  ),
-                  Text(
-                    Localizations.localeOf(context).languageCode == 'zh'
-                        ? '断食'
-                        : 'Fasting',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.faint,
-                    ),
-                  ),
-                  Text(
-                    Localizations.localeOf(context).languageCode == 'zh'
-                        ? '第一餐'
-                        : 'First meal',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.faint,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
         const SizedBox(height: 26),
         const _TodayTrackingSection(),
       ],
@@ -788,240 +724,6 @@ class _EndedView extends StatelessWidget {
   );
 }
 
-class _TodayCalendarSheet extends StatefulWidget {
-  const _TodayCalendarSheet({required this.sessions});
-  final List<FastingSession> sessions;
-
-  @override
-  State<_TodayCalendarSheet> createState() => _TodayCalendarSheetState();
-}
-
-class _TodayCalendarSheetState extends State<_TodayCalendarSheet> {
-  DateTime month = DateTime(DateTime.now().year, DateTime.now().month);
-
-  @override
-  Widget build(BuildContext context) {
-    final zh = Localizations.localeOf(context).languageCode == 'zh';
-    final locale = Localizations.localeOf(context);
-    final first = DateTime(month.year, month.month, 1);
-    final days = DateTime(month.year, month.month + 1, 0).day;
-    final leading = first.weekday % 7;
-    final progress = _monthProgress(widget.sessions, month);
-    final labels = zh
-        ? const ['日', '一', '二', '三', '四', '五', '六']
-        : const ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-    return SizedBox(
-      height: math.min(MediaQuery.sizeOf(context).height * .68, 620),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      zh ? '断食日历' : 'Fasting calendar',
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      zh ? '每天的圆环代表计划完成进度' : 'Each ring shows daily progress',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(CupertinoIcons.xmark),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          LighterCard(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => setState(
-                        () => month = DateTime(month.year, month.month - 1),
-                      ),
-                      icon: const Icon(CupertinoIcons.chevron_left, size: 18),
-                    ),
-                    Expanded(
-                      child: Text(
-                        DateFormat(
-                          zh ? 'y年M月' : 'MMMM y',
-                          locale.toLanguageTag(),
-                        ).format(month),
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => setState(
-                        () => month = DateTime(month.year, month.month + 1),
-                      ),
-                      icon: const Icon(CupertinoIcons.chevron_right, size: 18),
-                    ),
-                  ],
-                ),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 7,
-                    mainAxisExtent: 46,
-                  ),
-                  itemCount: 7 + leading + days,
-                  itemBuilder: (context, index) {
-                    if (index < 7) {
-                      return Center(
-                        child: Text(
-                          labels[index],
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: AppColors.faint,
-                          ),
-                        ),
-                      );
-                    }
-                    final day = index - 7 - leading + 1;
-                    if (day < 1 || day > days) {
-                      return const SizedBox.shrink();
-                    }
-                    return _CalendarProgressDay(
-                      day: day,
-                      progress: progress[day] ?? 0,
-                      isToday: _isToday(month, day),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _calendarLegend(AppColors.accent, zh ? '完成' : 'Completed'),
-              const SizedBox(width: 18),
-              _calendarLegend(AppColors.accentSoft, zh ? '部分完成' : 'Partial'),
-              const SizedBox(width: 18),
-              _calendarLegend(AppColors.border, zh ? '无记录' : 'No record'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Map<int, double> _monthProgress(
-    List<FastingSession> sessions,
-    DateTime targetMonth,
-  ) {
-    final result = <int, double>{};
-    for (final session in sessions) {
-      final start = DateTime.fromMillisecondsSinceEpoch(
-        session.startedAtUtcMs,
-        isUtc: true,
-      ).toLocal();
-      if (start.year != targetMonth.year || start.month != targetMonth.month) {
-        continue;
-      }
-      final endMs =
-          session.endedAtUtcMs ??
-          (DateTime.now().toUtc().millisecondsSinceEpoch);
-      final ratio =
-          ((endMs - session.startedAtUtcMs) / (session.targetMinutes * 60000))
-              .clamp(0.0, 1.0);
-      result[start.day] = math.max(result[start.day] ?? 0, ratio);
-    }
-    return result;
-  }
-
-  bool _isToday(DateTime targetMonth, int day) {
-    final now = DateTime.now();
-    return now.year == targetMonth.year &&
-        now.month == targetMonth.month &&
-        now.day == day;
-  }
-
-  Widget _calendarLegend(Color color, String label) => Row(
-    children: [
-      Container(
-        width: 9,
-        height: 9,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      ),
-      const SizedBox(width: 5),
-      Text(label, style: const TextStyle(fontSize: 11, color: AppColors.faint)),
-    ],
-  );
-}
-
-class _CalendarProgressDay extends StatelessWidget {
-  const _CalendarProgressDay({
-    required this.day,
-    required this.progress,
-    required this.isToday,
-  });
-  final int day;
-  final double progress;
-  final bool isToday;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: SizedBox(
-      width: 36,
-      height: 36,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          SizedBox(
-            width: 34,
-            height: 34,
-            child: CircularProgressIndicator(
-              value: progress == 0 ? 1 : progress,
-              strokeWidth: progress == 0 ? 1 : 3,
-              strokeCap: StrokeCap.round,
-              color: progress >= 1
-                  ? AppColors.accent
-                  : progress > 0
-                  ? AppColors.accentSoft
-                  : AppColors.border,
-              backgroundColor: AppColors.surface2,
-            ),
-          ),
-          Container(
-            width: 27,
-            height: 27,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: isToday
-                  ? Border.all(color: AppColors.strong, width: 1)
-                  : null,
-            ),
-            child: Text(
-              '$day',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
-                color: progress >= 1 ? AppColors.accent : AppColors.foreground,
-              ),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
 class _PlanPickerSheet extends ConsumerStatefulWidget {
   const _PlanPickerSheet({required this.plan});
   final FastingPlan plan;
@@ -1279,21 +981,6 @@ String _hours(int minutes) =>
 String _formatMinute(int minute) =>
     '${(minute ~/ 60).toString().padLeft(2, '0')}:'
     '${(minute % 60).toString().padLeft(2, '0')}';
-
-String _planLevelLabel(BuildContext context, int fastMinutes) {
-  final zh = Localizations.localeOf(context).languageCode == 'zh';
-  return _planGroups(zh)[_planGroupIndex(fastMinutes)].name;
-}
-
-String _planDescription(BuildContext context, FastingPlan? plan) {
-  final zh = Localizations.localeOf(context).languageCode == 'zh';
-  final fast = plan?.fastMinutes ?? 720;
-  final start = plan?.startMinuteOfDay ?? 1200;
-  final end = (start + fast) % 1440;
-  return zh
-      ? '每天断食 ${_hours(fast)} 小时，进餐 ${_hours(1440 - fast)} 小时 · ${_formatMinute(start)}—${_formatMinute(end)}'
-      : 'Fast ${_hours(fast)} hours, eat ${_hours(1440 - fast)} hours · ${_formatMinute(start)}—${_formatMinute(end)}';
-}
 
 class _AdjustFastSheet extends ConsumerStatefulWidget {
   const _AdjustFastSheet({required this.session});

@@ -28,6 +28,8 @@
 	<true/>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Lighter 读取你的今日步数，用于显示每日活动进度。数据只保存在你的设备上。</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Lighter 仅在你主动确认并授权时，才会将你确认的活动记录写入“健康”App；当前版本不会自动写入或修改任何健康数据。</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

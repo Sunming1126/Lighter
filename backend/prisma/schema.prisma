@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  displayName  String
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model FastingPlan {
+  id               String @id
+  userId           String
+  fastMinutes      Int    @default(720)
+  eatingMinutes    Int    @default(720)
+  startMinuteOfDay Int    @default(1200)
+  timezone         String @default("UTC")
+  active           Boolean @default(true)
+  paused           Boolean @default(false)
+  revision         Int    @default(1)
+  updatedAtUtcMs   BigInt
+  deletedAtUtcMs   BigInt?
+
+  @@unique([userId, id])
+  @@index([userId, updatedAtUtcMs])
+}
+
+model FastingSession {
+  id             String @id
+  userId         String
+  planId         String?
+  startedAtUtcMs BigInt
+  targetMinutes  Int
+  timezone       String @default("UTC")
+  endedAtUtcMs   BigInt?
+  endReason      String?
+  symptoms       Json   @default("[]")
+  revision       Int    @default(1)
+  updatedAtUtcMs BigInt
+  deletedAtUtcMs BigInt?
+
+  @@unique([userId, id])
+  @@index([userId, updatedAtUtcMs])
+}
+
+model WaterEntry {
+  id             String @id
+  userId         String
+  sessionId      String?
+  milliliters    Int
+  loggedAtUtcMs  BigInt
+  revision       Int    @default(1)
+  updatedAtUtcMs BigInt
+  deletedAtUtcMs BigInt?
+
+  @@unique([userId, id])
+  @@index([userId, updatedAtUtcMs])
+}
+
+model WeightEntry {
+  id             String @id
+  userId         String
+  kilograms      Float
+  loggedAtUtcMs  BigInt
+  note           String?
+  revision       Int    @default(1)
+  updatedAtUtcMs BigInt
+  deletedAtUtcMs BigInt?
+
+  @@unique([userId, id])
+  @@index([userId, updatedAtUtcMs])
+}
+
+model DailyHealthLog {
+  id                   String @id
+  userId               String
+  dateKey              String
+  timezone             String @default("UTC")
+  calories             Int    @default(0)
+  steps                Int    @default(0)
+  stepSource           String @default("manual")
+  stepsSyncedAtUtcMs   BigInt?
+  revision             Int    @default(1)
+  updatedAtUtcMs       BigInt
+  deletedAtUtcMs       BigInt?
+
+  @@unique([userId, id])
+  @@index([userId, updatedAtUtcMs])
+}
+
+model CalorieEntry {
+  id             String @id
+  userId         String
+  dateKey        String
+  mealType       String
+  calories       Int
+  loggedAtUtcMs  BigInt
+  timezone       String @default("UTC")
+  revision       Int    @default(1)
+  updatedAtUtcMs BigInt
+  deletedAtUtcMs BigInt?
+
+  @@unique([userId, id])
+  @@index([userId, updatedAtUtcMs])
+}
+
+model DailyTask {
+  id             String @id
+  userId         String
+  kind           String @default("custom")
+  title          String
+  iconKey        String
+  colorKey       String
+  goalType       String
+  targetValue    Float
+  unit           String
+  quickIncrement Float
+  weekdaysMask   Int    @default(127)
+  reminderMinute Int?
+  sortOrder      Int    @default(0)
+  enabled        Boolean @default(true)
+  createdAtUtcMs BigInt
+  revision       Int    @default(1)
+  updatedAtUtcMs BigInt
+  deletedAtUtcMs BigInt?
+
+  @@unique([userId, id])
+  @@index([userId, updatedAtUtcMs])
+}
+
+model TaskProgressEntry {
+  id             String @id
+  userId         String
+  taskId         String
+  dateKey        String
+  deltaValue     Float
+  goalSnapshot   Float
+  unitSnapshot   String
+  loggedAtUtcMs  BigInt
+  timezone       String @default("UTC")
+  revision       Int    @default(1)
+  updatedAtUtcMs BigInt
+  deletedAtUtcMs BigInt?
+
+  @@unique([userId, id])
+  @@index([userId, updatedAtUtcMs])
+}
+
+model UserProfile {
+  id             String @id
+  userId         String
+  email          String?
+  displayName    String
+  isGuest        Boolean @default(true)
+  createdAtUtcMs BigInt
+  revision       Int    @default(1)
+  updatedAtUtcMs BigInt
+  deletedAtUtcMs BigInt?
+
+  @@unique([userId, id])
+  @@index([userId, updatedAtUtcMs])
+}
+
+model SyncOpLog {
+  id             String   @id
+  idempotencyKey String   @unique
+  userId         String
+  entityType     String
+  entityId       String
+  status         String   @default("applied")
+  appliedAt      DateTime @default(now())
+
+  @@index([userId, entityType, entityId])
+}
